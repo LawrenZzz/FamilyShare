@@ -8,11 +8,32 @@ def serverUrl = project.findProperty('SERVER_URL') ?: 'http://192.168.1.100:3000
 def apiToken = project.findProperty('API_TOKEN') ?: 'familyshare-yjx120606'
 
 android {
+    // namespace 决定 R 类/BuildConfig 生成位置与清单里 ".Activity" 这类相对引用解析的包。
+    // 源码在 com/family/share/ 下，所以这里【保持 com.family.share 不变】，
+    // 只改 applicationId 就能改变手机上的安装包名——高德 Key 认的是 applicationId（getPackageName()）。
     namespace 'com.family.share'
     compileSdk 34
 
+    // 项目内签名：debug/release 各用独立的 keystore（android/app/ 下），保证最终 APK 的
+    // SHA1 与你注册高德 Key 时填的一致。release 密码来自 gradle.properties 的 RELEASE_KEYSTORE_PASSWORD。
+    def relPass = project.findProperty('RELEASE_KEYSTORE_PASSWORD') ?: 'CHANGE_ME_RELEASE_PASSWORD'
+    signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+        release {
+            storeFile file('release.keystore')
+            storePassword relPass
+            keyAlias 'familyshare'
+            keyPassword relPass
+        }
+    }
+
     defaultConfig {
-        applicationId "com.family.share"
+        applicationId "com.familyshare.simonel"
         minSdk 23
         targetSdk 34
         versionCode 1
@@ -26,7 +47,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
+            signingConfig signingConfigs.release
             // 开启混淆 + 资源压缩，减小安装包体积（原为 false）
             minifyEnabled true
             shrinkResources true

@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="@dimen/space_xl">
 
     <TextView
         android:id="@+id/tvDownloadHint"
@@ -25,7 +25,7 @@
         android:id="@+id/tvDownloadPercent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/space_sm"
         android:gravity="end"
         android:text="0%"
         android:textColor="@color/primary"

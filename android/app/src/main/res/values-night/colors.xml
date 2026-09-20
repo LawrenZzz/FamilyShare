@@ -1,6 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 深色模式配色：覆盖浅色值，保证深色背景下文字可读、界面统一 -->
+<!-- 深色模式配色：覆盖浅色值，玻璃基底换成深色半透明 -->
 <resources>
+    <!-- M3 语义 token（深色） -->
+    <color name="primary_container">#1D3F8F</color>
+    <color name="on_primary_container">#D9E4FF</color>
+    <color name="secondary">#5BD3C4</color>
+    <color name="secondary_container">#0A5148</color>
+    <color name="on_secondary_container">#A7EDE2</color>
+    <color name="tertiary">#B4A7FF</color>
+    <color name="tertiary_container">#3D2E8C</color>
+    <color name="on_tertiary_container">#E9E1FF</color>
+    <color name="surface">#12141A</color>
+    <color name="on_surface">#E3E6EC</color>
+    <color name="surface_variant">#2A2E36</color>
+    <color name="on_surface_variant">#C2C7D2</color>
+    <color name="outline">#8F94A0</color>
+    <color name="outline_variant">#3A3F4A</color>
+    <color name="error">#FFB4AB</color>
+    <color name="error_container">#93000A</color>
+
     <!-- 文本（深色背景下用亮色文字） -->
     <color name="text_primary">#E8EAF0</color>
     <color name="text_secondary">#A6ACB8</color>
@@ -17,10 +35,17 @@
     <color name="status_pill_offline">#2A2D35</color>
     <color name="status_pill_offline_text">#9AA0AC</color>
 
-    <!-- 面板/菜单/按钮底色 -->
+    <!-- 玻璃 token（深色） -->
+    <color name="glass_surface">#CC1F2228</color>
+    <color name="glass_surface_strong">#E61F2228</color>
+    <color name="glass_surface_weak">#A61F2228</color>
+    <color name="glass_stroke">#33FFFFFF</color>
+    <color name="glass_edge_shadow">#33000000</color>
+    <color name="glass_scrim">#40000000</color>
+
+    <!-- 面板/菜单/按钮底色（兼容旧引用） -->
     <color name="drag_handle">#565B66</color>
     <color name="bg_popup">#23262D</color>
     <color name="bg_overflow">#23262D</color>
-    <!-- 成员列表行卡片底色（比面板底色略亮一点，形成层次） -->
     <color name="bg_row">#2A2E36</color>
 </resources>

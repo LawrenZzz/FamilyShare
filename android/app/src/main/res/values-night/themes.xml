@@ -1,22 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 深色模式主题覆盖：状态栏/导航栏图标变亮色，底栏与面板同色（深色） -->
+<!-- 深色模式主题：状态/导航图标亮色，玻璃基色走深色 -->
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.FamilyShare" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/on_primary_container</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryContainer">@color/secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/on_secondary_container</item>
+        <item name="colorTertiary">@color/tertiary</item>
+        <item name="colorTertiaryContainer">@color/tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/on_tertiary_container</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+        <item name="colorOutline">@color/outline</item>
+        <item name="colorOutlineVariant">@color/outline_variant</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorErrorContainer">@color/error_container</item>
 
-        <!-- 沉浸式状态栏：透明，地图延伸至顶部 -->
+        <!-- 沉浸式状态栏 -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowLightStatusBar">false</item>
 
-        <!-- 底部导航栏与面板同色（深色），图标用亮色 -->
-        <item name="android:navigationBarColor">@color/bg_panel</item>
+        <!-- 底部导航栏：透明 + 亮色图标 -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentNavigation">true</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+        <item name="android:navigationBarDividerColor" tools:targetApi="n_mr1">@android:color/transparent</item>
 
-        <!-- 圆角风格统一 -->
-        <item name="android:dialogCornerRadius">20dp</item>
+        <item name="android:dialogCornerRadius">@dimen/corner_panel</item>
         <item name="materialAlertDialogTheme">@style/FamilyShare.Dialog</item>
+    </style>
+
+    <style name="FamilyShare.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="shapeAppearanceOverlay">@style/FamilyShare.Dialog.Shape</item>
+        <item name="colorSurface">@color/surface_variant</item>
+    </style>
+
+    <style name="FamilyShare.Dialog.Shape" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/corner_panel</item>
+    </style>
+
+    <style name="FamilyShare.PopupMenu" parent="Widget.Material3.PopupMenu">
+        <item name="android:popupBackground">@drawable/bg_glass_panel</item>
+        <item name="android:popupElevation">@dimen/elevation_panel</item>
+    </style>
+
+    <style name="FamilyShare.GlassCard" parent="">
+        <item name="android:background">@drawable/bg_glass_card</item>
+    </style>
+    <style name="FamilyShare.GlassChip" parent="">
+        <item name="android:background">@drawable/bg_glass_chip</item>
+    </style>
+
+    <style name="FamilyShare.Button.Glass" parent="Widget.Material3.Button.TonalButton">
+        <item name="shapeAppearanceOverlay">@style/FamilyShare.Shape.Pill.Button</item>
+        <item name="android:textColor">@color/on_primary_container</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+    <style name="FamilyShare.Shape.Pill.Button" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/corner_md</item>
     </style>
 </resources>

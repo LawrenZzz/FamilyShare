@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 成员列表底部渐隐 -->
+<!-- 地图底部压暗渐变：让玻璃面板在图上更有层次 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <gradient
         android:angle="270"
-        android:endColor="@color/glass_surface_strong"
+        android:endColor="@color/glass_scrim"
         android:startColor="@android:color/transparent" />
 </shape>

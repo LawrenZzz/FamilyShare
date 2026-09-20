@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="@dimen/space_xl">
 
     <TextView
         android:id="@+id/tvCode"
@@ -19,7 +19,7 @@
         android:id="@+id/ivQrCode"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="@dimen/space_md"
         android:contentDescription="@string/qr_code_desc"
         android:scaleType="fitCenter" />
 

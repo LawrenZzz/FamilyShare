@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="@dimen/space_lg">
 
         <!-- 头部：头像 + 名称 + 状态 -->
         <LinearLayout
@@ -20,8 +20,8 @@
 
             <TextView
                 android:id="@+id/dAvatar"
-                android:layout_width="46dp"
-                android:layout_height="46dp"
+                android:layout_width="@dimen/avatar_detail"
+                android:layout_height="@dimen/avatar_detail"
                 android:background="@drawable/bg_avatar"
                 android:gravity="center"
                 android:textColor="@color/white"
@@ -31,7 +31,7 @@
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/space_md"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -79,13 +79,13 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="14dp"
-            android:background="@color/divider" />
+            android:background="@color/glass_stroke" />
 
-        <!-- 电量 -->
+        <!-- 信息行 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="@dimen/space_md"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -105,7 +105,6 @@
                 android:textSize="14sp" />
         </LinearLayout>
 
-        <!-- 网络 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -129,7 +128,6 @@
                 android:textSize="14sp" />
         </LinearLayout>
 
-        <!-- 地址 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -153,7 +151,6 @@
                 android:textSize="14sp" />
         </LinearLayout>
 
-        <!-- 精度 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -177,7 +174,7 @@
                 android:textSize="14sp" />
         </LinearLayout>
 
-        <!-- 操作按钮 -->
+        <!-- 操作按钮：定位刷新 / 响铃 / 导航 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -186,7 +183,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/dRefresh"
-                style="@style/Widget.Material3.Button.TonalButton"
+                style="@style/FamilyShare.Button.Glass"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="3dp"
@@ -199,7 +196,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/dRing"
-                style="@style/Widget.Material3.Button.TonalButton"
+                style="@style/FamilyShare.Button.Glass"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="3dp"
@@ -212,7 +209,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/dNavi"
-                style="@style/Widget.Material3.Button.TonalButton"
+                style="@style/FamilyShare.Button.Glass"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="3dp"
@@ -229,13 +226,13 @@
             android:id="@+id/dOwnerArea"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/space_sm"
             android:orientation="horizontal"
             android:visibility="gone">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/dRemove"
-                style="@style/Widget.Material3.Button.TonalButton"
+                style="@style/FamilyShare.Button.Glass"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="3dp"
@@ -248,7 +245,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/dTrack"
-                style="@style/Widget.Material3.Button.TonalButton"
+                style="@style/FamilyShare.Button.Glass"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="3dp"

@@ -523,15 +523,28 @@ public class MainActivity extends AppCompatActivity {
         // 右上角 ⋮ 折叠菜单（家庭码 / 切换家庭 / 后台保活）
         AppCompatImageButton btnOverflow = findViewById(R.id.btnOverflow);
         btnOverflow.setOnClickListener(this::showOverflowMenu);
-        // 沉浸式状态栏下，让按钮避开状态栏区域
+        // 顶部操作条中的「家庭码」入口：复用原「家庭码」弹窗
+        com.google.android.material.button.MaterialButton btnShowCode = findViewById(R.id.btnShowCode);
+        btnShowCode.setOnClickListener(v -> showCodeDialog());
+        // 沉浸式状态栏/透明导航栏下，让顶部操作条与底部面板/刻度尺避开系统栏区域
         ViewCompat.setOnApplyWindowInsetsListener(btnOverflow.getRootView(), (v, insets) -> {
             int top = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
-            FrameLayout.LayoutParams lpOverflow = (FrameLayout.LayoutParams) btnOverflow.getLayoutParams();
-            lpOverflow.topMargin = top + dp(12);
-            btnOverflow.setLayoutParams(lpOverflow);
-            FrameLayout.LayoutParams lpRefresh = (FrameLayout.LayoutParams) btnRefresh.getLayoutParams();
-            lpRefresh.topMargin = top + dp(12);
-            btnRefresh.setLayoutParams(lpRefresh);
+            int bottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+
+            View topBar = findViewById(R.id.topBar);
+            FrameLayout.LayoutParams lpTop = (FrameLayout.LayoutParams) topBar.getLayoutParams();
+            lpTop.topMargin = top + dp(6);
+            topBar.setLayoutParams(lpTop);
+
+            View bottomPanel = findViewById(R.id.bottomPanel);
+            FrameLayout.LayoutParams lpPanel = (FrameLayout.LayoutParams) bottomPanel.getLayoutParams();
+            lpPanel.bottomMargin = bottom + dp(12);
+            bottomPanel.setLayoutParams(lpPanel);
+
+            View scaleBar = findViewById(R.id.scaleBar);
+            FrameLayout.LayoutParams lpScale = (FrameLayout.LayoutParams) scaleBar.getLayoutParams();
+            lpScale.bottomMargin = bottom + dp(12);
+            scaleBar.setLayoutParams(lpScale);
             return insets;
         });
 

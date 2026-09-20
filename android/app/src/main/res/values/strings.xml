@@ -9,6 +9,7 @@
     <string name="status_offline">服务器离线</string>
     <string name="btn_locate_me">定位我</string>
     <string name="btn_code">家庭码</string>
+    <string name="btn_family_code">家庭码</string>
     <string name="btn_family_setup">切换家庭</string>
     <string name="btn_battery">权限设置</string>
     <string name="no_member_yet">还没有家人，点击下方按钮创建/加入家庭</string>

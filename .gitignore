@@ -33,3 +33,18 @@ server/downloads/*.apk
 
 # 日志
 *.log
+
+# 安装包 / 第三方授权 SDK 压缩包（不随源码分发）
+*.apk
+Lite3DMap_AMapSearch_AMapLocation.zip
+
+# 环境变量（含密钥口令）
+.env
+server/.env
+.env.*
+!.env.example
+
+# 本地签名辅助 / 口令暂存文件
+.release-pass*
+*.release-pass*
+password*.txt

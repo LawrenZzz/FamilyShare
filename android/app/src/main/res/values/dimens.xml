@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 间距刻度 -->
+    <dimen name="space_xs">4dp</dimen>
+    <dimen name="space_sm">8dp</dimen>
+    <dimen name="space_md">12dp</dimen>
+    <dimen name="space_lg">16dp</dimen>
+    <dimen name="space_xl">24dp</dimen>
+
+    <!-- 圆角 -->
+    <dimen name="corner_sm">12dp</dimen>
+    <dimen name="corner_md">16dp</dimen>
+    <dimen name="corner_lg">20dp</dimen>
+    <dimen name="corner_panel">28dp</dimen>
+    <dimen name="corner_pill">999dp</dimen>
+
+    <!-- 尺寸 -->
+    <dimen name="avatar_row">44dp</dimen>
+    <dimen name="avatar_detail">48dp</dimen>
+    <dimen name="icon_sm">18dp</dimen>
+    <dimen name="icon_md">20dp</dimen>
+    <dimen name="icon_lg">24dp</dimen>
+    <dimen name="btn_float">42dp</dimen>
+    <dimen name="button_min">44dp</dimen>
+
+    <!-- 投影 -->
+    <dimen name="elevation_float">8dp</dimen>
+    <dimen name="elevation_panel">16dp</dimen>
+
+    <!-- 顶部操作条 -->
+    <dimen name="topbar_padding">6dp</dimen>
+</resources>

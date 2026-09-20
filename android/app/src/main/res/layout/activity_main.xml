@@ -11,51 +11,84 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- 左上角一键刷新（使用 arrow_clockwise.svg 图标） -->
-    <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/btnRefresh"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_gravity="top|start"
-        android:layout_marginTop="12dp"
-        android:layout_marginStart="12dp"
-        android:background="@drawable/bg_overflow_btn"
-        android:contentDescription="@string/menu_refresh"
-        android:elevation="6dp"
-        android:padding="10dp"
-        android:src="@drawable/ic_refresh_svg"
-        app:tint="@color/text_primary" />
+    <!-- 地图底部压暗渐变：让玻璃面板在图上更有层次（不拦截触摸） -->
+    <View
+        android:id="@+id/mapScrim"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bg_map_scrim_bottom"
+        android:clickable="false"
+        android:focusable="false" />
 
-    <!-- 右上角更多操作（⋮） -->
-    <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/btnOverflow"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="12dp"
-        android:background="@drawable/bg_overflow_btn"
-        android:contentDescription="@string/btn_more"
-        android:elevation="6dp"
-        android:padding="10dp"
-        android:src="@drawable/ic_more_vert"
-        app:tint="@color/text_primary" />
+    <!-- 顶部玻璃操作条：刷新 + 家庭码 + 更多 -->
+    <LinearLayout
+        android:id="@+id/topBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|top"
+        android:background="@drawable/bg_glass_chip"
+        android:elevation="@dimen/elevation_float"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="@dimen/topbar_padding">
 
-    <!-- 底部浮动卡片：状态 + 家人列表（可收缩）+ 定位按钮 -->
+        <!-- 一键刷新 -->
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/btnRefresh"
+            android:layout_width="@dimen/btn_float"
+            android:layout_height="@dimen/btn_float"
+            android:background="@drawable/bg_glass_btn"
+            android:contentDescription="@string/menu_refresh"
+            android:padding="10dp"
+            android:src="@drawable/ic_refresh_svg"
+            app:tint="@color/text_primary" />
+
+        <!-- 家庭码入口（点开家庭码 + 二维码弹窗，复用原有 showCodeDialog） -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnShowCode"
+            style="@style/FamilyShare.Button.Glass"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/btn_float"
+            android:layout_marginStart="4dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="0dp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="@string/btn_family_code"
+            android:textSize="13sp"
+            app:icon="@drawable/ic_dialpad"
+            app:iconGravity="textStart"
+            app:iconSize="@dimen/icon_md" />
+
+        <!-- 更多操作（⋮） -->
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/btnOverflow"
+            android:layout_width="@dimen/btn_float"
+            android:layout_height="@dimen/btn_float"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_glass_btn"
+            android:contentDescription="@string/btn_more"
+            android:padding="10dp"
+            android:src="@drawable/ic_more_vert"
+            app:tint="@color/text_primary" />
+    </LinearLayout>
+
+    <!-- 底部玻璃面板：状态 + 家人列表（可收缩）+ 定位按钮 -->
     <LinearLayout
         android:id="@+id/bottomPanel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:layout_marginStart="12dp"
-        android:layout_marginEnd="12dp"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/bg_bottom_panel"
-        android:elevation="12dp"
+        android:layout_marginStart="@dimen/space_md"
+        android:layout_marginEnd="@dimen/space_md"
+        android:background="@drawable/bg_glass_panel"
+        android:elevation="@dimen/elevation_panel"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/space_lg">
 
-        <!-- 灰色小横条：视觉仍是细条，但触摸区做成整行（宽 50% 面板宽 × 40dp 高），更容易按住拖拽 -->
+        <!-- 拖拽区 -->
         <View
             android:id="@+id/dragHandle"
             android:layout_width="match_parent"
@@ -63,7 +96,7 @@
             android:layout_gravity="center_horizontal"
             android:background="@drawable/bg_drag_handle_area" />
 
-        <!-- 头部：返回按钮（详情时显示）+ 标题 + 连接状态胶囊（手势滑动区域） -->
+        <!-- 头部：返回 + 标题 + 响铃开关 + 状态胶囊 -->
         <LinearLayout
             android:id="@+id/panelHeader"
             android:layout_width="match_parent"
@@ -75,7 +108,7 @@
                 android:id="@+id/btnBack"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:background="@drawable/bg_glass_btn"
                 android:contentDescription="@string/btn_back"
                 android:padding="6dp"
                 android:src="@drawable/ic_back"
@@ -97,10 +130,10 @@
                 android:id="@+id/btnStopRing"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="@dimen/space_sm"
                 android:background="@drawable/bg_ring_stop"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
+                android:paddingStart="@dimen/space_md"
+                android:paddingEnd="@dimen/space_md"
                 android:paddingTop="5dp"
                 android:paddingBottom="5dp"
                 android:text="@string/btn_stop_ring"
@@ -112,7 +145,7 @@
                 android:id="@+id/statusPill"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_status_pill"
+                android:background="@drawable/bg_glass_chip"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingStart="10dp"
@@ -137,178 +170,174 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 可整体收缩的面板主体（列表 + 按钮） -->
+        <!-- 可整体收缩的面板主体 -->
         <LinearLayout
             android:id="@+id/panelBody"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="12dp"
-            android:background="@color/divider" />
-
-        <!-- 家庭成员数量（简洁标签，非按钮） -->
-        <TextView
-            android:id="@+id/tvMemberCount"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:textColor="@color/text_secondary"
-            android:textSize="13sp" />
-
-        <!-- 可收缩区域：成员列表 + 空提示 + 分隔线 -->
-        <LinearLayout
-            android:id="@+id/listArea"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <!-- 成员列表：底部叠加透明渐变 + 「还有更多」提示，一行只露出半截也能看出下面还有人 -->
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/memberList"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clipToPadding="false"
-                    android:maxHeight="250dp"
-                    android:overScrollMode="never" />
-
-                <!-- 顶部渐隐（上方还有内容时显示，被裁掉的那半行自然淡出） -->
-                <View
-                    android:id="@+id/listTopMore"
-                    android:layout_width="match_parent"
-                    android:layout_height="26dp"
-                    android:layout_gravity="top"
-                    android:background="@drawable/bg_fade_top"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:visibility="gone" />
-
-                <!-- 底部渐隐（下方还有内容时显示，半截行淡出提示可下滑） -->
-                <View
-                    android:id="@+id/listBottomMore"
-                    android:layout_width="match_parent"
-                    android:layout_height="30dp"
-                    android:layout_gravity="bottom"
-                    android:background="@drawable/bg_fade_bottom"
-                    android:clickable="false"
-                    android:focusable="false"
-                    android:visibility="gone" />
-            </FrameLayout>
-
-            <TextView
-                android:id="@+id/tvEmpty"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center"
-                android:text="@string/no_member_yet"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp"
-                android:visibility="gone" />
-
-            <!-- 空状态引导卡片：没有家人时给出明确入口（比一行灰字更容易上手） -->
-            <LinearLayout
-                android:id="@+id/emptyCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:background="@drawable/bg_empty_card"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"
-                android:paddingTop="18dp"
-                android:paddingBottom="16dp"
-                android:visibility="gone">
-
-                <ImageView
-                    android:layout_width="34dp"
-                    android:layout_height="34dp"
-                    android:alpha="0.85"
-                    android:contentDescription="@string/empty_family_title"
-                    android:src="@drawable/ic_people"
-                    app:tint="@color/primary" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/empty_family_title"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:gravity="center"
-                    android:lineSpacingExtra="2dp"
-                    android:text="@string/empty_family_desc"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnEmptyAction"
-                    style="@style/Widget.Material3.Button.TonalButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    android:minHeight="38dp"
-                    android:text="@string/empty_family_action"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
+                android:layout_marginTop="@dimen/space_md"
+                android:background="@color/glass_stroke" />
+
+            <TextView
+                android:id="@+id/tvMemberCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <!-- 成员列表 + 空状态 -->
+            <LinearLayout
+                android:id="@+id/listArea"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/memberList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clipToPadding="false"
+                        android:maxHeight="250dp"
+                        android:overScrollMode="never" />
+
+                    <View
+                        android:id="@+id/listTopMore"
+                        android:layout_width="match_parent"
+                        android:layout_height="26dp"
+                        android:layout_gravity="top"
+                        android:background="@drawable/bg_fade_top"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:visibility="gone" />
+
+                    <View
+                        android:id="@+id/listBottomMore"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"
+                        android:layout_gravity="bottom"
+                        android:background="@drawable/bg_fade_bottom"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:visibility="gone" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/tvEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_sm"
+                    android:gravity="center"
+                    android:text="@string/no_member_yet"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
+                <!-- 空状态引导卡 -->
+                <LinearLayout
+                    android:id="@+id/emptyCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_glass_card"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:paddingTop="18dp"
+                    android:paddingBottom="16dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:alpha="0.85"
+                        android:contentDescription="@string/empty_family_title"
+                        android:src="@drawable/ic_people"
+                        app:tint="@color/primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_sm"
+                        android:text="@string/empty_family_title"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:gravity="center"
+                        android:lineSpacingExtra="2dp"
+                        android:text="@string/empty_family_desc"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnEmptyAction"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_md"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:minHeight="38dp"
+                        android:text="@string/empty_family_action"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@color/glass_stroke" />
+            </LinearLayout>
+
+            <!-- 主操作：定位我 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLocateMe"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:background="@color/divider" />
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:minHeight="46dp"
+                android:text="@string/btn_locate_me"
+                android:textSize="14sp"
+                app:icon="@drawable/ic_my_location"
+                app:iconGravity="textStart"
+                app:iconSize="@dimen/icon_sm"
+                app:iconTint="@color/white" />
+
+            <!-- 切换家庭 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSwitchFamily"
+                style="@style/FamilyShare.Button.Glass"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:minHeight="42dp"
+                android:text="@string/btn_switch_family"
+                android:textSize="14sp"
+                android:visibility="gone"
+                app:icon="@drawable/ic_people"
+                app:iconGravity="textStart"
+                app:iconSize="@dimen/icon_md" />
         </LinearLayout>
 
-        <!-- 主操作：定位我 -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnLocateMe"
-            style="@style/Widget.Material3.Button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="46dp"
-            android:text="@string/btn_locate_me"
-            android:textSize="14sp"
-            app:icon="@drawable/ic_my_location"
-            app:iconGravity="textStart"
-            app:iconSize="18dp"
-            app:iconTint="@color/white" />
-
-        <!-- 切换家庭：存在多个家庭时显示（替代原来的左右滑动切换） -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSwitchFamily"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="42dp"
-            android:text="@string/btn_switch_family"
-            android:textSize="14sp"
-            android:visibility="gone"
-            app:icon="@drawable/ic_people"
-            app:iconGravity="textStart"
-            app:iconSize="18dp" />
-        </LinearLayout>
-
-        <!-- 成员详情（内嵌在悬浮窗口内查看，不弹窗） -->
+        <!-- 成员详情（内嵌在悬浮窗口内查看） -->
         <LinearLayout
             android:id="@+id/detailArea"
             android:layout_width="match_parent"
@@ -317,14 +346,13 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- 自绘刻度尺：默认刻度尺会被底部面板遮挡，这里自绘并跟随面板高度定位 -->
+    <!-- 自绘刻度尺 -->
     <LinearLayout
         android:id="@+id/scaleBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|start"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="12dp"
+        android:layout_marginStart="@dimen/space_lg"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:visibility="gone">
@@ -333,10 +361,10 @@
             android:id="@+id/tvScaleText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
+            android:layout_marginEnd="@dimen/space_xs"
             android:background="@drawable/bg_scale_label"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp"
+            android:paddingStart="@dimen/space_xs"
+            android:paddingEnd="@dimen/space_xs"
             android:text="100米"
             android:textColor="@color/white"
             android:textSize="10sp" />
