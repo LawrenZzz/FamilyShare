@@ -18,6 +18,7 @@
     <description>家庭共享后端（Java / Spring Boot）</description>
 
     <properties>
+        <!-- 注意：Spring Boot 3.3.4 官方支持 Java 17–22，请勿改成 25（启动会因 ASM 不识别 Java25 字节码而崩） -->
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>

@@ -1,0 +1,6 @@
+
+The following files have been resolved:
+   org.springframework.boot:spring-boot-starter-web:jar:3.3.4:compile[36m -- module spring.boot.starter.web[0;1m [auto][m
+   org.springframework.boot:spring-boot-starter-websocket:jar:3.3.4:compile[36m -- module spring.boot.starter.websocket[0;1m [auto][m
+   org.springframework.boot:spring-boot-starter-data-redis:jar:3.3.4:compile[36m -- module spring.boot.starter.data.redis[0;1m [auto][m
+

@@ -1,0 +1,75 @@
+# docker-compose.yml —— 家庭共享(FamilyShare) 服务端一键部署
+# 使用：在 server/ 目录下
+#   docker compose up -d --build
+# 需要先创建一个共享网络给 NPM 反代用：
+#   docker network create fms-net
+name: familyshare
+
+services:
+  # ---------- Spring Boot 服务端 ----------
+  app:
+    build: .               # 用同目录 Dockerfile 从源码构建（Java 17）
+    image: family-share-server:1.0.0
+    container_name: familyshare-app
+    restart: unless-stopped
+    environment:
+      # 访问口令：客户端 gradle.properties 的 API_TOKEN 必须与 APP_API_TOKEN 一致
+      APP_API_TOKEN: "${APP_API_TOKEN:?请在 .env 里设置 APP_API_TOKEN}"
+      # Bug 管理页 /bugadmin/<token> 的路径口令
+      APP_BUG_ADMIN_TOKEN: "${APP_BUG_ADMIN_TOKEN:?请在 .env 里设置 APP_BUG_ADMIN_TOKEN}"
+      # 只读状态看板 /dashboard/<token> 的路径口令
+      APP_DASHBOARD_TOKEN: "${APP_DASHBOARD_TOKEN:?请在 .env 里设置 APP_DASHBOARD_TOKEN}"
+      # Redis：走 compose 内部主机名 redis，口令来自 .env
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_PASSWORD: "${REDIS_PASSWORD:?请在 .env 里设置 REDIS_PASSWORD}"
+      # 中文 + 东八区
+      TZ: "Asia/Shanghai"
+      LANG: "C.UTF-8"
+    volumes:
+      - fms-icons:/app/icons         # 成员头像（持久化）
+      - fms-downloads:/app/downloads # 应用更新 APK（把 app-release.apk 放这里）
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/3000'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - fms-net
+    # 不向宿主机暴露 3000：公网访问走 NPM 反向代理(同网络内按 service 名 app:3000 访问)
+    # 如需临时直连调试，可取消注释下面这行：
+    # ports:
+    #   - "3000:3000"
+
+  # ---------- Redis ----------
+  redis:
+    image: redis:7-alpine
+    container_name: familyshare-redis
+    restart: unless-stopped
+    # 开启 AOF 持久化 + 口令认证（口令来自 .env 的 REDIS_PASSWORD）
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - fms-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fms-net
+
+# ---------- 命名卷 ----------
+volumes:
+  fms-icons:
+  fms-downloads:
+  fms-redis:
+
+# ---------- 共享网络：供 Nginx Proxy Manager 加入以反代本服务 ----------
+networks:
+  fms-net:
+    name: fms-net
+    external: true  # 需预先 docker network create fms-net

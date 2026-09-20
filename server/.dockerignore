@@ -1,0 +1,21 @@
+# 构建上下文不需要这些，避免把本地产物/密钥打进镜像
+target/
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+*.log
+
+# 运行时数据（不打包；数据用卷挂载）
+icons/
+downloads/
+bugs.json
+
+# 本工具文件
+docker-compose.yml
+.env
+.env.example
+dependency-list.txt
+run-server.bat
+smoke-test.mjs
