@@ -41,6 +41,8 @@ server/.env
 !.env.example
 
 # Local signing helpers and password scratch files
+*.keystore
+*.jks
 .release-pass*
 *.release-pass*
 password*.txt
