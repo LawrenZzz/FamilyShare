@@ -1,0 +1,47 @@
+plugins {
+    id 'com.android.application'
+    id 'dev.flutter.flutter-gradle-plugin'
+}
+
+def amapKey = project.findProperty('AMAP_KEY') ?: 'YOUR_AMAP_KEY_HERE'
+def serverUrl = project.findProperty('SERVER_URL') ?: 'http://10.0.2.2:3000'
+def apiToken = project.findProperty('API_TOKEN') ?: 'mdi9a9083df9bnq97ssdbibbu7d98'
+
+android {
+    namespace 'com.familyshare.simonel'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.familyshare.simonel'
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+        ndk { abiFilters 'armeabi-v7a', 'arm64-v8a' }
+        manifestPlaceholders = [AMAP_KEY: amapKey]
+        buildConfigField 'String', 'AMAP_KEY', "\"${amapKey}\""
+        buildConfigField 'String', 'SERVER_URL', "\"${serverUrl}\""
+        buildConfigField 'String', 'API_TOKEN', "\"${apiToken}\""
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    buildFeatures { buildConfig true }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+}
+
+flutter { source '../..' }
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.core:core:1.13.1'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+}

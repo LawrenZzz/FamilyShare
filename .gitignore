@@ -3,13 +3,13 @@
 Thumbs.db
 desktop.ini
 
-# IDE / 编辑器
+# IDE files
 .idea/
 *.iml
 .vscode/
 *.class
 
-# Android 构建产物
+# Android build products
 android/.gradle/
 android/build/
 android/app/build/
@@ -18,18 +18,41 @@ android/captures/
 android/.cxx/
 android/.externalNativeBuild/
 
-# Java 构建产物
+# Java build products
 server/target/
 
-# 签名密钥（私有，绝不提交）
-*.keystore
-*.jks
-
-# 服务端运行时数据（不提交）
+# Server runtime data
 server/data/db.json
 server/bugs.json
 server/icons/*
 server/downloads/*.apk
 
-# 日志
+# Logs
 *.log
+
+# APKs and third-party SDK archives
+*.apk
+Lite3DMap_AMapSearch_AMapLocation.zip
+
+# Environment files
+.env
+server/.env
+.env.*
+!.env.example
+
+# Local signing helpers and password scratch files
+.release-pass*
+*.release-pass*
+password*.txt
+
+# Flutter generated files and machine-local Android settings
+flutter/.dart_tool/
+flutter/build/
+flutter/.idea/
+flutter/*.iml
+flutter/.flutter-plugins
+flutter/.flutter-plugins-dependencies
+flutter/android/.gradle/
+flutter/android/.kotlin/
+flutter/android/local.properties
+flutter/android/app/build/
