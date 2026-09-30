@@ -12,6 +12,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 final class AvatarPicker {
+    // Leave room for multipart headers and reverse-proxy request limits.
+    private static final int MAX_UPLOAD_BYTES = 900 * 1024;
+
     private AvatarPicker() {}
 
     static byte[] readJpeg(Context context, Uri uri) throws IOException {
@@ -47,9 +50,9 @@ final class AvatarPicker {
         for (int quality = 88; quality >= 58; quality -= 10) {
             output.reset();
             scaled.compress(Bitmap.CompressFormat.JPEG, quality, output);
-            if (output.size() <= 1_048_576) break;
+            if (output.size() <= MAX_UPLOAD_BYTES) break;
         }
-        if (output.size() > 1_048_576) throw new IOException("图片压缩后仍超过 1 MB");
+        if (output.size() > MAX_UPLOAD_BYTES) throw new IOException("头像压缩后仍超过 900 KB");
         return output.toByteArray();
     }
 }

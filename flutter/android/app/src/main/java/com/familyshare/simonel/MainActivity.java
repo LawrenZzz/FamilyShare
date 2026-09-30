@@ -105,6 +105,7 @@ public final class MainActivity extends FlutterActivity {
                             Intent pick = new Intent(Intent.ACTION_GET_CONTENT);
                             pick.setType("image/*");
                             pick.addCategory(Intent.CATEGORY_OPENABLE);
+                            pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                             startActivityForResult(Intent.createChooser(pick, "选择头像"), AVATAR_PICK_REQUEST);
                         } catch (RuntimeException error) {
                             avatarResult = null;

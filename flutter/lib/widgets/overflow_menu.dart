@@ -269,10 +269,11 @@ class _MoreActionsSheet extends StatelessWidget {
   }
 
   void _uploadAvatar(BuildContext context) async {
-    final result = await context.read<AppProvider>().uploadMyAvatar();
+    final app = context.read<AppProvider>();
+    final result = await app.uploadMyAvatar();
     if (!context.mounted || result == null) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(result ? '头像已上传' : '头像上传失败，请稍后重试')),
+      SnackBar(content: Text(result ? '头像已上传' : app.avatarUploadError)),
     );
   }
 

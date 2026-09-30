@@ -71,8 +71,9 @@ class MemberDetailScreen extends StatelessWidget {
                                 if (!context.mounted || result == null) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content:
-                                        Text(result ? '头像已上传' : '头像上传失败，请稍后重试'),
+                                    content: Text(result
+                                        ? '头像已上传'
+                                        : app.avatarUploadError),
                                   ),
                                 );
                               },

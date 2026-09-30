@@ -29,6 +29,9 @@ class AppProvider extends ChangeNotifier {
   final List<JoinRequest> _joinRequests = [];
   Timer? _joinPollTimer;
   Timer? _statusTimer;
+  String _avatarUploadError = '';
+
+  String get avatarUploadError => _avatarUploadError;
 
   String get pendingJoinRequestId => _prefs.pendingJoinRequestId;
 
@@ -102,21 +105,67 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<bool?> uploadMyAvatar() async {
-    if (_apiService == null || familyId.isEmpty || deviceId.isEmpty)
+    _avatarUploadError = '';
+    if (_apiService == null || familyId.isEmpty || deviceId.isEmpty) {
+      _avatarUploadError = '请先加入家庭后再上传头像';
       return false;
+    }
     try {
       final jpeg = await DeviceBridge().pickAvatar();
       if (jpeg == null) return null;
+      if (jpeg.isEmpty) {
+        _avatarUploadError = '未读取到图片内容，请重新选择图片';
+        return false;
+      }
       final result = await _apiService!.uploadAvatar(deviceId, familyId, jpeg);
       if (!result.ok) {
+        _avatarUploadError = _avatarErrorMessage(result);
         debugPrint('Avatar upload failed: ${result.error}');
         return false;
       }
       refreshMembers();
       return true;
+    } on PlatformException catch (error) {
+      _avatarUploadError = _platformAvatarError(error);
+      debugPrint('Avatar picker failed: ${error.code}: ${error.message}');
+      return false;
     } catch (error) {
+      _avatarUploadError = '头像处理失败：$error';
       debugPrint('Avatar picker failed: $error');
       return false;
+    }
+  }
+
+  String _avatarErrorMessage(ApiResponse response) {
+    final detail = response.error ?? '';
+    switch (response.statusCode) {
+      case 401:
+        return '服务器拒绝访问，请检查 API 口令';
+      case 403:
+        return '当前设备不属于这个家庭，请重新加入家庭';
+      case 404:
+        return '服务器还没有部署头像上传接口，请更新后端';
+      case 413:
+        return '图片太大，请选择较小的图片';
+      case 500:
+        return '服务器保存头像失败，请检查服务器的 icons 目录权限';
+      default:
+        return detail.isEmpty ? '上传失败，请检查网络连接' : '上传失败：$detail';
+    }
+  }
+
+  String _platformAvatarError(PlatformException error) {
+    switch (error.code) {
+      case 'PICKER_BUSY':
+        return '图片选择器仍在使用，请稍候再试';
+      case 'AVATAR_READ_FAILED':
+        return '无法读取所选图片，请选择手机本地图片';
+      case 'PICKER_FAILED':
+        return '无法打开图片选择器';
+      default:
+        return error.message?.trim().isNotEmpty == true
+            ? '头像处理失败：${error.message}'
+            : '头像处理失败，请重新选择图片';
     }
   }
 

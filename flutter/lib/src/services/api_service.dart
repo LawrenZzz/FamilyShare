@@ -76,8 +76,32 @@ class ApiService {
     if (resp.statusCode >= 200 && resp.statusCode < 300) {
       return ApiResponse.ok(resp.body);
     }
-    return ApiResponse.error('HTTP ${resp.statusCode}',
+    final detail = _responseError(resp.body);
+    final suffix = detail.isEmpty ? '' : ': $detail';
+    return ApiResponse.error('HTTP ${resp.statusCode}$suffix',
         statusCode: resp.statusCode);
+  }
+
+  String _responseError(String body) {
+    final trimmed = body.trim();
+    if (trimmed.isEmpty) return '';
+    try {
+      final decoded = jsonDecode(trimmed);
+      if (decoded is Map) {
+        for (final key in const ['error', 'message', 'msg']) {
+          final value = decoded[key];
+          if (value is String && value.trim().isNotEmpty) {
+            return value.trim();
+          }
+        }
+      }
+    } catch (_) {
+      // Some reverse proxies return a plain text error page.
+    }
+    final singleLine = trimmed.replaceAll(RegExp(r'\s+'), ' ');
+    return singleLine.length > 180
+        ? '${singleLine.substring(0, 180)}...'
+        : singleLine;
   }
 
   String _netMessage(dynamic e) {
