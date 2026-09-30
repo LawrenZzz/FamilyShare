@@ -6,7 +6,8 @@ desktop.ini
 # IDE files
 .idea/
 *.iml
-.vscode/
+.vscode/*
+!.vscode/launch.json
 *.class
 
 # Android build products

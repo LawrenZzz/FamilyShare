@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter：稳定调试",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/flutter",
+      "program": "lib/main.dart",
+      "flutterMode": "debug",
+      "toolArgs": [
+        "--no-start-paused"
+      ]
+    }
+  ]
+}

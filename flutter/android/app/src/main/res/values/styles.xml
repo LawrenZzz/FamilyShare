@@ -6,5 +6,15 @@
         <item name="android:navigationBarColor">#F7F9FC</item>
         <item name="android:statusBarColor">#F7F9FC</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:forceDarkAllowed">false</item>
+    </style>
+
+    <style name="LaunchTheme" parent="@style/Theme.FamilyShare">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+
+    <style name="NormalTheme" parent="@style/Theme.FamilyShare">
+        <item name="android:windowBackground">#F7F9FC</item>
     </style>
 </resources>
