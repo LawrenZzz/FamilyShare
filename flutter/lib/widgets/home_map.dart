@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../src/models/member.dart';
 import '../src/providers/app_provider.dart';
 import '../src/providers/ui_provider.dart';
+import '../src/utils/boot_log.dart';
 
 const _mapChannel = MethodChannel('familyshare/map');
 
@@ -28,6 +29,12 @@ class _HomeMapState extends State<HomeMap> {
   String _lastSignature = '';
 
   @override
+  void initState() {
+    super.initState();
+    bootLog('Map', 'HomeMap.initState');
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<AppProvider>(
       builder: (_, app, __) {
@@ -39,6 +46,7 @@ class _HomeMapState extends State<HomeMap> {
           return AndroidView(
             viewType: 'familyshare/amap',
             onPlatformViewCreated: (id) {
+              bootLog('Map', 'Android platform view created; id=$id');
               _lastSignature = '';
               _syncNativeMarkers(app.members, signature);
               MethodChannel('familyshare/map/$id')
@@ -78,11 +86,17 @@ class _HomeMapState extends State<HomeMap> {
                     })
                 .toList());
       } on MissingPluginException {
-        // The preview remains available on non-Android targets.
+        bootLog('Map', 'native map plugin is unavailable');
       } on PlatformException catch (e) {
-        debugPrint('Map update failed: ${e.message}');
+        bootLog('Map', 'marker update failed', error: e);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    bootLog('Map', 'HomeMap.dispose');
+    super.dispose();
   }
 }
 

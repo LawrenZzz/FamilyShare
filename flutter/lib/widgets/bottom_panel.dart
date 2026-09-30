@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../src/providers/app_provider.dart';
 import '../src/providers/ui_provider.dart';
+import '../src/utils/boot_log.dart';
 import 'member_list.dart';
 
 class BottomPanel extends StatelessWidget {
@@ -24,6 +25,14 @@ class BottomPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screen = MediaQuery.sizeOf(context);
+    if (screen.width <= 32 || screen.height <= 0) {
+      bootLog(
+        'Layout',
+        'waiting for valid viewport metrics; size='
+            '${screen.width}x${screen.height}',
+      );
+      return const SizedBox.shrink();
+    }
     final panelHeight = (screen.height * 0.42).clamp(250.0, 380.0).toDouble();
     final buttonWidth = screen.width - 32;
 

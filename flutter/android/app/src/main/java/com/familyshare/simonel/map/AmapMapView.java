@@ -2,6 +2,7 @@ package com.familyshare.simonel.map;
 
 import android.app.Activity;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 
@@ -13,6 +14,7 @@ import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
+import com.familyshare.simonel.BuildConfig;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,7 +28,9 @@ import io.flutter.plugin.platform.PlatformView;
 
 /** A small bridge around the local Lite3DMap SDK. */
 public final class AmapMapView extends FrameLayout implements PlatformView {
+    private static final String TAG = "FamilyShareBoot";
     private final MapView mapView;
+    private final int viewId;
     private AMap map;
     private final MethodChannel channel;
     private final Map<String, Marker> markers = new HashMap<>();
@@ -36,17 +40,27 @@ public final class AmapMapView extends FrameLayout implements PlatformView {
 
     public AmapMapView(Activity activity, BinaryMessenger messenger, int viewId) {
         super(activity);
+        this.viewId = viewId;
+        bootLog("AMap view constructor started");
         setBackgroundColor(Color.rgb(232, 238, 246));
         channel = new MethodChannel(messenger, "familyshare/map/" + viewId);
         mapView = new MapView(activity);
+        bootLog("AMap MapView allocated");
         mapView.onCreate(null);
+        bootLog("AMap MapView.onCreate completed");
         mapView.onResume();
         addView(mapView, new FrameLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        bootLog("AMap MapView attached");
         // Lite3DMap exposes the map asynchronously. Updates received before
         // this callback are kept and applied as soon as the renderer is ready.
         mapView.getMapAsyn(readyMap -> {
+            if (readyMap == null) {
+                Log.e(TAG, "AMap async callback returned null; viewId=" + viewId);
+                return;
+            }
             map = readyMap;
+            bootLog("AMap renderer ready");
             map.setMapType(AMap.MAP_TYPE_NORMAL);
             map.getUiSettings().setAllGesturesEnabled(true);
             map.setOnMarkerClickListener(marker -> {
@@ -74,6 +88,7 @@ public final class AmapMapView extends FrameLayout implements PlatformView {
         if (disposed || rawMembers == null) return;
         if (map == null) {
             pendingMembers = rawMembers;
+            bootLog("marker update queued until renderer is ready; count=" + rawMembers.size());
             return;
         }
         Set<String> incoming = new HashSet<>();
@@ -128,8 +143,13 @@ public final class AmapMapView extends FrameLayout implements PlatformView {
     public void dispose() {
         if (disposed) return;
         disposed = true;
+        bootLog("AMap view disposed");
         markers.clear();
         mapView.onDestroy();
+    }
+
+    private void bootLog(String message) {
+        if (BuildConfig.DEBUG) Log.i(TAG, message + "; viewId=" + viewId);
     }
 
     private static String stringValue(Object value) {

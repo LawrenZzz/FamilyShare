@@ -77,18 +77,18 @@ class _HomeScreenState extends State<HomeScreen> {
               right: 0,
               child: BottomPanel(),
             ),
-            Consumer<UiProvider>(
-              builder: (_, ui, __) {
-                if (!ui.detailOpen || ui.selectedDeviceId == null) {
-                  return const SizedBox.shrink();
-                }
-                return Positioned.fill(
-                  child: MemberDetailScreen(
+            Positioned.fill(
+              child: Consumer<UiProvider>(
+                builder: (_, ui, __) {
+                  if (!ui.detailOpen || ui.selectedDeviceId == null) {
+                    return const SizedBox.shrink();
+                  }
+                  return MemberDetailScreen(
                     deviceId: ui.selectedDeviceId!,
                     onClose: ui.closeDetail,
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ],
         ),

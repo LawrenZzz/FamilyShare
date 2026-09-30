@@ -1,16 +1,21 @@
 package com.familyshare.simonel.map;
 
 import android.app.Activity;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.familyshare.simonel.BuildConfig;
+
 import java.util.List;
+
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.StandardMessageCodec;
 import io.flutter.plugin.platform.PlatformView;
 import io.flutter.plugin.platform.PlatformViewFactory;
 
 public final class AmapMapViewFactory extends PlatformViewFactory {
+    private static final String TAG = "FamilyShareBoot";
     private final Activity activity;
     private final BinaryMessenger messenger;
     private AmapMapView current;
@@ -25,6 +30,7 @@ public final class AmapMapViewFactory extends PlatformViewFactory {
     @Override
     public PlatformView create(@NonNull android.content.Context context, int id,
                                Object args) {
+        if (BuildConfig.DEBUG) Log.i(TAG, "AMap PlatformView factory create; id=" + id);
         current = new AmapMapView(activity, messenger, id);
         return current;
     }
