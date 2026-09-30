@@ -5,19 +5,12 @@ import 'package:provider/provider.dart';
 
 import '../src/providers/app_provider.dart';
 import '../src/providers/ui_provider.dart';
+import '../src/theme/app_theme.dart';
 import '../src/utils/boot_log.dart';
 import 'member_list.dart';
 
 class BottomPanel extends StatelessWidget {
   const BottomPanel({super.key});
-
-  static const _glassSettings = LiquidGlassSettings(
-    blur: 14,
-    thickness: 24,
-    saturation: 1.2,
-    glassColor: Color(0x42FFFFFF),
-    platformViewFallbackColor: Color(0xF0FFFFFF),
-  );
 
   bool get _overNativeMap =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
@@ -35,6 +28,8 @@ class BottomPanel extends StatelessWidget {
     }
     final panelHeight = (screen.height * 0.42).clamp(250.0, 380.0).toDouble();
     final buttonWidth = screen.width - 32;
+    final scheme = Theme.of(context).colorScheme;
+    final glassSettings = FamilyShareTheme.mapGlassSettings(context);
 
     return SafeArea(
       top: false,
@@ -51,6 +46,7 @@ class BottomPanel extends StatelessWidget {
                     width: buttonWidth,
                     memberCount: app.members.length,
                     expanded: false,
+                    glassSettings: glassSettings,
                   )
                 : Column(
                     mainAxisSize: MainAxisSize.min,
@@ -63,8 +59,8 @@ class BottomPanel extends StatelessWidget {
                         shape: const LiquidRoundedSuperellipse(
                           borderRadius: 22,
                         ),
-                        settings: _glassSettings,
-                        quality: GlassQuality.standard,
+                        settings: glassSettings,
+                        quality: GlassQuality.premium,
                         useOwnLayer: true,
                         platformViewBackdrop: _overNativeMap,
                         child: Column(
@@ -79,16 +75,16 @@ class BottomPanel extends StatelessWidget {
                                   ),
                                   child: Row(
                                     children: [
-                                      const Icon(
+                                      Icon(
                                         Icons.family_restroom_rounded,
-                                        color: Color(0xFF0F766E),
+                                        color: scheme.primary,
                                       ),
                                       const SizedBox(width: 10),
-                                      const Expanded(
+                                      Expanded(
                                         child: Text(
                                           '家庭成员',
                                           style: TextStyle(
-                                            color: Color(0xFF102A2C),
+                                            color: scheme.onSurface,
                                             fontSize: 17,
                                             fontWeight: FontWeight.w700,
                                           ),
@@ -96,23 +92,26 @@ class BottomPanel extends StatelessWidget {
                                       ),
                                       Text(
                                         '${app.members.length} 位',
-                                        style: const TextStyle(
-                                          color: Color(0xFF5F7476),
+                                        style: TextStyle(
+                                          color: scheme.onSurfaceVariant,
                                           fontSize: 13,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                       const SizedBox(width: 8),
-                                      const Icon(
+                                      Icon(
                                         Icons.keyboard_arrow_down_rounded,
-                                        color: Color(0xFF456063),
+                                        color: scheme.onSurfaceVariant,
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
                             ),
-                            const Divider(height: 1, color: Color(0x1F0F766E)),
+                            Divider(
+                              height: 1,
+                              color: scheme.outlineVariant,
+                            ),
                             const Expanded(child: MemberList()),
                           ],
                         ),
@@ -123,6 +122,7 @@ class BottomPanel extends StatelessWidget {
                         width: buttonWidth,
                         memberCount: app.members.length,
                         expanded: true,
+                        glassSettings: glassSettings,
                       ),
                     ],
                   ),
@@ -137,13 +137,15 @@ class BottomPanel extends StatelessWidget {
     required double width,
     required int memberCount,
     required bool expanded,
+    required LiquidGlassSettings glassSettings,
   }) {
+    final scheme = Theme.of(context).colorScheme;
     return GlassButton.custom(
       width: width,
       height: 58,
       useOwnLayer: true,
-      quality: GlassQuality.standard,
-      settings: _glassSettings,
+      quality: GlassQuality.premium,
+      settings: glassSettings,
       platformViewBackdrop: _overNativeMap,
       shape: const LiquidRoundedSuperellipse(borderRadius: 22),
       stretch: 0.12,
@@ -153,16 +155,16 @@ class BottomPanel extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 18),
         child: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.family_restroom_rounded,
-              color: Color(0xFF0F766E),
+              color: scheme.primary,
               size: 23,
             ),
             const SizedBox(width: 10),
             Text(
               expanded ? '收起家庭成员' : '家庭成员',
-              style: const TextStyle(
-                color: Color(0xFF102A2C),
+              style: TextStyle(
+                color: scheme.onSurface,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
@@ -173,13 +175,13 @@ class BottomPanel extends StatelessWidget {
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F766E).withValues(alpha: 0.12),
+                color: scheme.primaryContainer.withValues(alpha: 0.72),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Text(
                 '$memberCount',
-                style: const TextStyle(
-                  color: Color(0xFF0F766E),
+                style: TextStyle(
+                  color: scheme.onPrimaryContainer,
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                 ),
@@ -190,7 +192,7 @@ class BottomPanel extends StatelessWidget {
               expanded
                   ? Icons.keyboard_arrow_down_rounded
                   : Icons.keyboard_arrow_up_rounded,
-              color: const Color(0xFF456063),
+              color: scheme.onSurfaceVariant,
             ),
           ],
         ),

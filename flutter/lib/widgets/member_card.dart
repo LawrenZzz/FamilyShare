@@ -15,13 +15,19 @@ class MemberCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final secondaryText = scheme.onSurfaceVariant;
     return Card(
       margin: EdgeInsets.zero,
       elevation: 0,
-      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.94),
+      color: isDark
+          ? scheme.surfaceContainerHighest.withValues(alpha: 0.9)
+          : scheme.surfaceContainerLowest.withValues(alpha: 0.94),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: Color(0x140F766E)),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.9)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -38,7 +44,10 @@ class MemberCard extends StatelessWidget {
         ),
         title: Text(
           '${member.name.isNotEmpty ? member.name : member.deviceId}${isSelf ? '（我）' : ''}',
-          style: const TextStyle(fontWeight: FontWeight.w600),
+          style: TextStyle(
+            color: scheme.onSurface,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,16 +60,16 @@ class MemberCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: member.online
                         ? (member.offlineMode
-                            ? Colors.grey
-                            : const Color(0xFF4ADE80))
-                        : Colors.grey,
+                            ? secondaryText
+                            : const Color(0xFF22C55E))
+                        : secondaryText,
                     shape: BoxShape.circle,
                   ),
                 ),
                 const SizedBox(width: 4),
                 Text(
                   member.online ? (member.offlineMode ? '离线模式' : '在线') : '离线',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontSize: 12, color: secondaryText),
                 ),
               ],
             ),
@@ -71,7 +80,7 @@ class MemberCard extends StatelessWidget {
                   : '暂无位置信息',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(fontSize: 12, color: secondaryText),
             ),
             if (member.battery >= 0) ...[
               const SizedBox(height: 2),
@@ -85,19 +94,31 @@ class MemberCard extends StatelessWidget {
                   const SizedBox(width: 2),
                   Text(
                     '${member.battery}%',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(fontSize: 12, color: secondaryText),
                   ),
                 ],
               ),
             ],
           ],
         ),
-        trailing: member.isOwner
-            ? const Chip(
-                label: Text('群主', style: TextStyle(fontSize: 10)),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (member.isOwner)
+              Chip(
+                label: const Text('群主', style: TextStyle(fontSize: 10)),
                 visualDensity: VisualDensity.compact,
-              )
-            : null,
+                backgroundColor: scheme.primaryContainer,
+                side: BorderSide.none,
+              ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: secondaryText,
+            ),
+          ],
+        ),
         onTap: onTap,
       ),
     );

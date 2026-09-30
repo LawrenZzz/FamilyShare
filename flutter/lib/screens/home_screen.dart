@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../src/providers/app_provider.dart';
 import '../src/providers/ui_provider.dart';
+import '../src/theme/app_theme.dart';
 import '../widgets/bottom_panel.dart';
 import '../widgets/home_map.dart';
 import '../widgets/member_detail.dart';
@@ -19,14 +20,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const _glassSettings = LiquidGlassSettings(
-    blur: 12,
-    thickness: 22,
-    saturation: 1.2,
-    glassColor: Color(0x38FFFFFF),
-    platformViewFallbackColor: Color(0xE8FFFFFF),
-  );
-
   AppProvider? _app;
   bool _redirecting = false;
 
@@ -61,12 +54,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark.copyWith(
+      value: (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
+          .copyWith(
         statusBarColor: Colors.transparent,
         systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
       ),
       child: Scaffold(
+        backgroundColor: Colors.transparent,
         body: Stack(
           children: [
             const Positioned.fill(child: HomeMap()),
@@ -97,6 +95,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTopBar(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final glassSettings = FamilyShareTheme.mapGlassSettings(context);
+    final controlColor =
+        isDark ? const Color(0xFFE6F6F2) : const Color(0xFF0B4744);
     return Positioned(
       top: 0,
       left: 0,
@@ -114,8 +118,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     height: 56,
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     shape: const LiquidRoundedSuperellipse(borderRadius: 18),
-                    settings: _glassSettings,
-                    quality: GlassQuality.standard,
+                    settings: glassSettings,
+                    quality: GlassQuality.premium,
                     useOwnLayer: true,
                     platformViewBackdrop: _overNativeMap,
                     child: Column(
@@ -126,8 +130,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           code.isEmpty ? '家庭共享' : '家庭码  $code',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFF102A2C),
+                          style: TextStyle(
+                            color: scheme.onSurface,
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                           ),
@@ -151,8 +155,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 '${_statusText(app.status)} · ${app.members.length} 位成员',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Color(0xFF456063),
+                                style: TextStyle(
+                                  color: scheme.onSurfaceVariant,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -167,20 +171,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 8),
                 GlassButtonGroup.icons(
                   useOwnLayer: true,
-                  quality: GlassQuality.standard,
-                  settings: _glassSettings,
+                  quality: GlassQuality.premium,
+                  settings: glassSettings,
                   platformViewBackdrop: _overNativeMap,
                   borderRadius: 18,
+                  borderColor: scheme.outlineVariant.withValues(alpha: 0.8),
                   itemPadding: const EdgeInsets.all(11),
                   iconSize: 21,
                   items: [
                     GlassButtonGroupItem(
-                      icon: const Icon(Icons.sync_rounded),
+                      icon: Icon(Icons.sync_rounded, color: controlColor),
                       label: '刷新家庭成员',
                       onTap: app.refreshMembers,
                     ),
                     GlassButtonGroupItem(
-                      icon: const Icon(Icons.my_location_rounded),
+                      icon:
+                          Icon(Icons.my_location_rounded, color: controlColor),
                       label: '定位到我的位置',
                       onTap: () async {
                         await app.locateMe();
@@ -188,7 +194,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                     GlassButtonGroupItem(
-                      icon: const Icon(Icons.more_horiz_rounded),
+                      icon: Icon(
+                        isDark
+                            ? Icons.light_mode_rounded
+                            : Icons.dark_mode_rounded,
+                        color: controlColor,
+                      ),
+                      label: isDark ? '切换到浅色模式' : '切换到深色模式',
+                      onTap: () =>
+                          context.read<UiProvider>().setDarkMode(!isDark),
+                    ),
+                    GlassButtonGroupItem(
+                      icon: Icon(Icons.more_horiz_rounded, color: controlColor),
                       label: '更多功能',
                       onTap: () => OverflowMenu.show(context),
                     ),

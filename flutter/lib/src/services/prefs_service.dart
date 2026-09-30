@@ -23,6 +23,7 @@ class PrefsService {
   int get trackIntervalMs =>
       _prefs.getInt('track_interval_ms') ?? (5 * 60 * 1000);
   bool get ringEnabled => _prefs.getBool('ring_enabled') ?? true;
+  String get themeMode => _prefs.getString('theme_mode') ?? 'system';
   double get lastLat => _prefs.getDouble('last_lat') ?? 0.0;
   double get lastLng => _prefs.getDouble('last_lng') ?? 0.0;
   int get lastTs => _prefs.getInt('last_ts') ?? 0;
@@ -38,6 +39,7 @@ class PrefsService {
   void setTrackEnabled(bool v) => _prefs.setBool('track_enabled', v);
   void setTrackIntervalMs(int ms) => _prefs.setInt('track_interval_ms', ms);
   void setRingEnabled(bool v) => _prefs.setBool('ring_enabled', v);
+  void setThemeMode(String mode) => _prefs.setString('theme_mode', mode);
   void saveLastLocation(double lat, double lng, int ts) {
     _prefs.setDouble('last_lat', lat);
     _prefs.setDouble('last_lng', lng);

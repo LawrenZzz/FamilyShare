@@ -5,20 +5,31 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../src/providers/app_provider.dart';
+import '../src/providers/ui_provider.dart';
 import '../src/services/prefs_service.dart';
+import '../src/theme/app_theme.dart';
 
 class OverflowMenu extends StatelessWidget {
   const OverflowMenu({super.key});
 
   static Future<void> show(BuildContext context) {
-    return showModalBottomSheet<void>(
+    final theme = Theme.of(context);
+    final overNativeMap =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+    return GlassModalSheet.show<void>(
       context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      showDragHandle: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      initialState: GlassSheetState.half,
+      halfSize: 0.78,
+      fullSize: 0.92,
+      quality: GlassQuality.premium,
+      settings: FamilyShareTheme.overlayGlassSettings(context),
+      expandedColor: theme.colorScheme.surface,
+      platformViewBackdrop: overNativeMap,
+      barrierColor: theme.colorScheme.scrim.withValues(
+        alpha: theme.brightness == Brightness.dark ? 0.5 : 0.26,
+      ),
       builder: (_) => FractionallySizedBox(
-        heightFactor: 0.78,
+        heightFactor: 1,
         child: _MoreActionsSheet(parentContext: context),
       ),
     );
@@ -29,10 +40,15 @@ class OverflowMenu extends StatelessWidget {
     final overNativeMap =
         !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
     return GlassIconButton(
-      icon: const Icon(Icons.more_horiz_rounded),
+      icon: Icon(
+        Icons.more_horiz_rounded,
+        color: Theme.of(context).colorScheme.onSurface,
+      ),
       onPressed: () => show(context),
       semanticLabel: '更多功能',
       useOwnLayer: true,
+      settings: FamilyShareTheme.mapGlassSettings(context),
+      quality: GlassQuality.premium,
       platformViewBackdrop: overNativeMap,
     );
   }
@@ -46,7 +62,10 @@ class _MoreActionsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
+    final ui = context.watch<UiProvider>();
     final prefs = PrefsService();
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Column(
       children: [
         Padding(
@@ -71,6 +90,24 @@ class _MoreActionsSheet extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
             children: [
+              _tile(
+                context,
+                icon:
+                    isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                title: '深色模式',
+                subtitle: isDark ? '已使用深色外观' : '当前使用浅色外观',
+                trailing: Switch.adaptive(
+                  value: isDark,
+                  onChanged: (value) {
+                    ui.setDarkMode(value);
+                    Navigator.pop(context);
+                  },
+                ),
+                onTap: () {
+                  ui.setDarkMode(!isDark);
+                  Navigator.pop(context);
+                },
+              ),
               _tile(
                 context,
                 icon: Icons.key_rounded,
@@ -122,7 +159,7 @@ class _MoreActionsSheet extends StatelessWidget {
                 context,
                 icon: Icons.settings_rounded,
                 title: '设置',
-                subtitle: '离线模式和响铃偏好',
+                subtitle: '外观、离线模式和响铃偏好',
                 onTap: () => _open(context, _showSettings),
               ),
               if (app.isOwner)
@@ -148,13 +185,43 @@ class _MoreActionsSheet extends StatelessWidget {
     required String subtitle,
     required VoidCallback onTap,
     Color? color,
+    Widget? trailing,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: color),
-      title: Text(title, style: TextStyle(color: color)),
-      subtitle: Text(subtitle),
-      trailing: const Icon(Icons.chevron_right_rounded),
-      onTap: onTap,
+    final scheme = Theme.of(context).colorScheme;
+    final foreground = color ?? scheme.onSurface;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        tileColor: scheme.surfaceContainerHigh.withValues(alpha: 0.58),
+        leading: Container(
+          width: 38,
+          height: 38,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: color == null
+                ? scheme.primaryContainer.withValues(alpha: 0.78)
+                : scheme.errorContainer,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            size: 21,
+            color: color == null ? scheme.onPrimaryContainer : scheme.error,
+          ),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(color: foreground, fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(color: scheme.onSurfaceVariant),
+        ),
+        trailing: trailing ??
+            Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+        onTap: onTap,
+      ),
     );
   }
 
@@ -482,13 +549,30 @@ class _SettingsDialogState extends State<_SettingsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('设置'),
+    final ui = context.watch<UiProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GlassDialog(
+      title: '设置',
+      maxWidth: 380,
+      settings: FamilyShareTheme.overlayGlassSettings(context),
+      quality: GlassQuality.premium,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
+            secondary: Icon(
+              isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+            ),
+            title: const Text('深色模式'),
+            subtitle: Text(isDark ? '减少夜间屏幕亮度' : '使用明亮清晰的界面'),
+            value: isDark,
+            onChanged: ui.setDarkMode,
+          ),
+          const Divider(),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            secondary: const Icon(Icons.visibility_off_rounded),
             title: const Text('离线模式'),
             subtitle: const Text('暂停上传当前位置'),
             value: _offline,
@@ -499,6 +583,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
+            secondary: const Icon(Icons.notifications_active_rounded),
             title: const Text('允许设备响铃'),
             value: _ringEnabled,
             onChanged: (value) {
@@ -509,9 +594,10 @@ class _SettingsDialogState extends State<_SettingsDialog> {
         ],
       ),
       actions: [
-        TextButton(
+        GlassDialogAction(
+          label: '完成',
+          isPrimary: true,
           onPressed: () => Navigator.pop(context),
-          child: const Text('完成'),
         ),
       ],
     );

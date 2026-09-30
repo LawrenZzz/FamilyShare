@@ -15,6 +15,7 @@ import '../src/services/location_service.dart';
 import '../src/providers/app_provider.dart';
 import '../src/providers/map_provider.dart';
 import '../src/providers/ui_provider.dart';
+import '../src/theme/app_theme.dart';
 import '../src/utils/boot_log.dart';
 import 'screens/home_screen.dart';
 import 'screens/setup_screen.dart';
@@ -51,11 +52,7 @@ Future<void> main() async {
         child: const FamilyShareApp(),
         brightnessResolver: Theme.maybeBrightnessOf,
         adaptiveQuality: true,
-        theme: GlassThemeData.simple(
-          blur: 12,
-          thickness: 24,
-          quality: GlassQuality.standard,
-        ),
+        theme: FamilyShareTheme.glassTheme,
       ),
     );
     binding.addPostFrameCallback((_) {
@@ -195,40 +192,28 @@ class _FamilyShareAppState extends State<FamilyShareApp> {
         ChangeNotifierProvider.value(value: _mapProvider),
         ChangeNotifierProvider.value(value: _uiProvider),
       ],
-      child: MaterialApp(
-        title: '家庭共享',
-        debugShowCheckedModeBanner: false,
-        locale: const Locale('zh', 'CN'),
-        supportedLocales: const [Locale('zh', 'CN')],
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF0F766E),
-            brightness: Brightness.light,
-          ),
-          useMaterial3: true,
-          appBarTheme: const AppBarTheme(
-            centerTitle: true,
-            elevation: 0,
-          ),
+      child: Consumer<UiProvider>(
+        builder: (_, ui, __) => MaterialApp(
+          title: '家庭共享',
+          debugShowCheckedModeBanner: false,
+          locale: const Locale('zh', 'CN'),
+          supportedLocales: const [Locale('zh', 'CN')],
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          theme: FamilyShareTheme.light(),
+          darkTheme: FamilyShareTheme.dark(),
+          themeMode: ui.themeMode,
+          themeAnimationDuration: const Duration(milliseconds: 320),
+          themeAnimationCurve: Curves.easeOutCubic,
+          home: _ready
+              ? const _RouteChecker()
+              : const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                ),
+          routes: {
+            '/setup': (_) => const SetupScreen(),
+            '/home': (_) => const HomeScreen(),
+          },
         ),
-        darkTheme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF0F766E),
-            brightness: Brightness.dark,
-          ),
-          useMaterial3: true,
-        ),
-        themeMode: ThemeMode.system,
-        home: _ready
-            ? const _RouteChecker()
-            : const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              ),
-        routes: {
-          '/setup': (_) => const SetupScreen(),
-          '/home': (_) => const HomeScreen(),
-        },
       ),
     );
   }

@@ -34,16 +34,16 @@ class MemberList extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return const Center(
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.people_outline, size: 48, color: Colors.grey),
-          SizedBox(height: 8),
-          Text('还没有家庭成员', style: TextStyle(color: Colors.grey)),
-          SizedBox(height: 4),
-          Text('邀请家人加入后即可共享位置',
-              style: TextStyle(color: Colors.grey, fontSize: 12)),
+          Icon(Icons.people_outline, size: 48, color: color),
+          const SizedBox(height: 8),
+          Text('还没有家庭成员', style: TextStyle(color: color)),
+          const SizedBox(height: 4),
+          Text('邀请家人加入后即可共享位置', style: TextStyle(color: color, fontSize: 12)),
         ],
       ),
     );
