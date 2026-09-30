@@ -5,6 +5,11 @@ plugins {
 
 def amapKey = project.findProperty('AMAP_KEY') ?: 'YOUR_AMAP_KEY_HERE'
 def apiToken = project.findProperty('API_TOKEN') ?: 'mdi9a9083df9bnq97ssdbibbu7d98'
+def releaseKeystore = file('familyshare-release.keystore')
+def releasePasswordFile = rootProject.file('.release-pass-familyshare')
+def releasePassword = releasePasswordFile.exists()
+        ? releasePasswordFile.getText('UTF-8').trim()
+        : ''
 
 android {
     namespace 'com.familyshare.simonel'
@@ -24,6 +29,15 @@ android {
         buildConfigField 'String', 'API_TOKEN', "\"${apiToken}\""
     }
 
+    signingConfigs {
+        familyshareRelease {
+            storeFile releaseKeystore
+            storePassword releasePassword
+            keyAlias 'familyshare'
+            keyPassword releasePassword
+        }
+    }
+
     // AMap bundles optional location implementations that are not present in
     // the lightweight SDK package. Keep release builds reliable until a
     // project-specific R8 keep configuration is added.
@@ -31,6 +45,9 @@ android {
         release {
             minifyEnabled false
             shrinkResources false
+            if (releaseKeystore.exists() && !releasePassword.isEmpty()) {
+                signingConfig signingConfigs.familyshareRelease
+            }
         }
     }
 
