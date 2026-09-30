@@ -21,76 +21,84 @@ class MemberDetailScreen extends StatelessWidget {
       orElse: () => Member(deviceId: deviceId),
     );
 
-    return Container(
-      color: Colors.black.withValues(alpha: 0.5),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(context, member),
-                  const Divider(),
-                  _infoRow(Icons.battery_full, 'Battery',
-                      '${member.battery >= 0 ? "${member.battery}%" : "N/A"}'),
-                  _infoRow(Icons.wifi, 'Network',
-                      member.network.isNotEmpty ? member.network : 'N/A'),
-                  _infoRow(
-                      Icons.location_on,
-                      'Location',
-                      member.hasLocation
-                          ? '${member.lat.toStringAsFixed(4)}, ${member.lng.toStringAsFixed(4)}'
-                          : 'N/A'),
-                  _infoRow(
-                      Icons.gps_fixed,
-                      'Accuracy',
-                      member.hasLocation
-                          ? '${member.accuracy.toInt()}m'
-                          : 'N/A'),
-                  const SizedBox(height: 16),
-                  Row(
+    return Material(
+      color: Colors.black.withValues(alpha: 0.45),
+      child: SafeArea(
+        minimum: const EdgeInsets.all(16),
+        child: Center(
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            app.requestLocation(deviceId);
-                            onClose();
-                          },
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Refresh'),
-                        ),
+                      _buildHeader(context, member),
+                      const Divider(),
+                      _infoRow(Icons.battery_full, '电量',
+                          '${member.battery >= 0 ? "${member.battery}%" : "暂无"}'),
+                      _infoRow(Icons.wifi, '网络',
+                          member.network.isNotEmpty ? member.network : '暂无'),
+                      _infoRow(
+                          Icons.location_on,
+                          '位置',
+                          member.hasLocation
+                              ? '${member.lat.toStringAsFixed(4)}, ${member.lng.toStringAsFixed(4)}'
+                              : '暂无'),
+                      _infoRow(
+                          Icons.gps_fixed,
+                          '定位精度',
+                          member.hasLocation
+                              ? '${member.accuracy.toInt()}m'
+                              : '暂无'),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                app.requestLocation(deviceId);
+                                onClose();
+                              },
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('刷新位置'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                app.requestRing(deviceId, app.deviceName);
+                                onClose();
+                              },
+                              icon: const Icon(Icons.notifications),
+                              label: const Text('设备响铃'),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            app.requestRing(deviceId, app.deviceName);
-                            onClose();
-                          },
-                          icon: const Icon(Icons.notifications),
-                          label: const Text('Ring'),
+                      if (app.isOwner) ...[
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: () => _showRemoveDialog(context, member),
+                          icon: const Icon(Icons.delete),
+                          label: const Text('移除成员'),
                         ),
+                      ],
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: onClose,
+                        child: const Text('关闭'),
                       ),
                     ],
                   ),
-                  if (app.isOwner) ...[
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      onPressed: () => _showRemoveDialog(context, member),
-                      icon: const Icon(Icons.delete),
-                      label: const Text('Remove Member'),
-                    ),
-                  ],
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: onClose,
-                    child: const Text('Close'),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -137,15 +145,13 @@ class MemberDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    member.online
-                        ? (member.offlineMode ? 'Offline Mode' : 'Online')
-                        : 'Offline',
+                    member.online ? (member.offlineMode ? '离线模式' : '在线') : '离线',
                     style: const TextStyle(color: Colors.grey),
                   ),
                   if (member.isOwner) ...[
                     const SizedBox(width: 8),
                     const Chip(
-                      label: Text('Owner', style: TextStyle(fontSize: 10)),
+                      label: Text('群主', style: TextStyle(fontSize: 10)),
                       visualDensity: VisualDensity.compact,
                     ),
                   ],
@@ -186,12 +192,14 @@ class MemberDetailScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Remove Member'),
-        content: Text('Remove ${member.name} from family?'),
+        title: const Text('移除家庭成员'),
+        content: Text(
+          '确定将 ${member.name.isEmpty ? member.deviceId : member.name} 移出家庭吗？',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('取消'),
           ),
           TextButton(
             onPressed: () {
@@ -199,7 +207,7 @@ class MemberDetailScreen extends StatelessWidget {
               Navigator.pop(context);
               onClose();
             },
-            child: const Text('Remove'),
+            child: const Text('移除'),
           ),
           TextButton(
             onPressed: () {
@@ -207,7 +215,7 @@ class MemberDetailScreen extends StatelessWidget {
               Navigator.pop(context);
               onClose();
             },
-            child: const Text('Remove & Ban'),
+            child: const Text('移除并禁止再次加入'),
           ),
         ],
       ),

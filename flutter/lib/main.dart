@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../src/config/app_config.dart';
@@ -15,6 +17,7 @@ import 'screens/setup_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LiquidGlassWidgets.initialize(enablePerformanceMonitor: false);
   await AppConfig.init();
   await PrefsService.init();
   final prefs = PrefsService();
@@ -23,7 +26,18 @@ Future<void> main() async {
   } else {
     AppConfig.setDeviceId(prefs.deviceId);
   }
-  runApp(const FamilyShareApp());
+  runApp(
+    LiquidGlassWidgets.wrap(
+      child: const FamilyShareApp(),
+      brightnessResolver: Theme.maybeBrightnessOf,
+      adaptiveQuality: true,
+      theme: GlassThemeData.simple(
+        blur: 12,
+        thickness: 24,
+        quality: GlassQuality.standard,
+      ),
+    ),
+  );
 }
 
 class FamilyShareApp extends StatefulWidget {
@@ -80,11 +94,14 @@ class _FamilyShareAppState extends State<FamilyShareApp> {
         ChangeNotifierProvider.value(value: _uiProvider),
       ],
       child: MaterialApp(
-        title: 'FamilyShare',
+        title: '家庭共享',
         debugShowCheckedModeBanner: false,
+        locale: const Locale('zh', 'CN'),
+        supportedLocales: const [Locale('zh', 'CN')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF4A6CF7),
+            seedColor: const Color(0xFF0F766E),
             brightness: Brightness.light,
           ),
           useMaterial3: true,
@@ -95,7 +112,7 @@ class _FamilyShareAppState extends State<FamilyShareApp> {
         ),
         darkTheme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF4A6CF7),
+            seedColor: const Color(0xFF0F766E),
             brightness: Brightness.dark,
           ),
           useMaterial3: true,

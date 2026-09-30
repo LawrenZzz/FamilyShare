@@ -14,10 +14,11 @@ class MemberList extends StatelessWidget {
         if (app.members.isEmpty) {
           return _buildEmptyState(context);
         }
-        return ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(10, 10, 10, 14),
+          physics: const BouncingScrollPhysics(),
           itemCount: app.members.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 6),
           itemBuilder: (_, idx) {
             final member = app.members[idx];
             return MemberCard(
@@ -39,9 +40,9 @@ class MemberList extends StatelessWidget {
         children: [
           Icon(Icons.people_outline, size: 48, color: Colors.grey),
           SizedBox(height: 8),
-          Text('No members yet', style: TextStyle(color: Colors.grey)),
+          Text('还没有家庭成员', style: TextStyle(color: Colors.grey)),
           SizedBox(height: 4),
-          Text('Create or join a family to start sharing',
+          Text('邀请家人加入后即可共享位置',
               style: TextStyle(color: Colors.grey, fontSize: 12)),
         ],
       ),

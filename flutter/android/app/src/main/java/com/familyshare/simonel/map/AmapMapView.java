@@ -93,13 +93,13 @@ public final class AmapMapView extends FrameLayout implements PlatformView {
             if (marker == null) {
                 marker = map.addMarker(new MarkerOptions()
                         .position(point)
-                        .title(name.isEmpty() ? "Family member" : name)
+                        .title(name.isEmpty() ? "家庭成员" : name)
                         .snippet(stringValue(member.get("address"))));
                 marker.setObject(id);
                 markers.put(id, marker);
             } else {
                 marker.setPosition(point);
-                marker.setTitle(name.isEmpty() ? "Family member" : name);
+                marker.setTitle(name.isEmpty() ? "家庭成员" : name);
             }
         }
         for (String id : new HashSet<>(markers.keySet())) {

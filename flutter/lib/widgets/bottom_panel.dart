@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
+
 import '../src/providers/app_provider.dart';
 import '../src/providers/ui_provider.dart';
 import 'member_list.dart';
@@ -7,94 +10,178 @@ import 'member_list.dart';
 class BottomPanel extends StatelessWidget {
   const BottomPanel({super.key});
 
+  static const _glassSettings = LiquidGlassSettings(
+    blur: 14,
+    thickness: 24,
+    saturation: 1.2,
+    glassColor: Color(0x42FFFFFF),
+    platformViewFallbackColor: Color(0xF0FFFFFF),
+  );
+
+  bool get _overNativeMap =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
   @override
   Widget build(BuildContext context) {
-    return Consumer<UiProvider>(
-      builder: (_, ui, __) {
-        final height = ui.panelCollapsed ? 56.0 : 280.0;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          height: height,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(16),
-              topRight: Radius.circular(16),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 8,
-                offset: Offset(0, -2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              _buildHandle(context),
-              if (!ui.panelCollapsed) ...[
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final screen = MediaQuery.sizeOf(context);
+    final panelHeight = (screen.height * 0.42).clamp(250.0, 380.0).toDouble();
+    final buttonWidth = screen.width - 32;
+
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Consumer2<UiProvider, AppProvider>(
+        builder: (_, ui, app, __) {
+          return AnimatedSize(
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.bottomCenter,
+            child: ui.panelCollapsed
+                ? _toggleButton(
+                    context,
+                    width: buttonWidth,
+                    memberCount: app.members.length,
+                    expanded: false,
+                  )
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        'Family Members',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                      GlassContainer(
+                        width: buttonWidth,
+                        height: panelHeight,
+                        padding: EdgeInsets.zero,
+                        clipBehavior: Clip.antiAlias,
+                        shape: const LiquidRoundedSuperellipse(
+                          borderRadius: 22,
+                        ),
+                        settings: _glassSettings,
+                        quality: GlassQuality.standard,
+                        useOwnLayer: true,
+                        platformViewBackdrop: _overNativeMap,
+                        child: Column(
+                          children: [
+                            InkWell(
+                              onTap: ui.togglePanel,
+                              child: SizedBox(
+                                height: 58,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 18,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.family_restroom_rounded,
+                                        color: Color(0xFF0F766E),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      const Expanded(
+                                        child: Text(
+                                          '家庭成员',
+                                          style: TextStyle(
+                                            color: Color(0xFF102A2C),
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        '${app.members.length} 位',
+                                        style: const TextStyle(
+                                          color: Color(0xFF5F7476),
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: Color(0xFF456063),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Divider(height: 1, color: Color(0x1F0F766E)),
+                            const Expanded(child: MemberList()),
+                          ],
+                        ),
                       ),
-                      Text(
-                        '${context.read<AppProvider>().members.length} members',
-                        style: const TextStyle(color: Colors.grey),
+                      const SizedBox(height: 10),
+                      _toggleButton(
+                        context,
+                        width: buttonWidth,
+                        memberCount: app.members.length,
+                        expanded: true,
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: const MemberList(),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildHandle(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.read<UiProvider>().togglePanel(),
-      child: Container(
-        height: 56,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+  Widget _toggleButton(
+    BuildContext context, {
+    required double width,
+    required int memberCount,
+    required bool expanded,
+  }) {
+    return GlassButton.custom(
+      width: width,
+      height: 58,
+      useOwnLayer: true,
+      quality: GlassQuality.standard,
+      settings: _glassSettings,
+      platformViewBackdrop: _overNativeMap,
+      shape: const LiquidRoundedSuperellipse(borderRadius: 22),
+      stretch: 0.12,
+      label: expanded ? '收起家庭成员' : '展开家庭成员',
+      onTap: context.read<UiProvider>().togglePanel,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
+            const Icon(
+              Icons.family_restroom_rounded,
+              color: Color(0xFF0F766E),
+              size: 23,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              expanded ? '收起家庭成员' : '家庭成员',
+              style: const TextStyle(
+                color: Color(0xFF102A2C),
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              context.read<UiProvider>().panelCollapsed
-                  ? 'Show Members'
-                  : 'Hide Members',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            const Spacer(),
+            Container(
+              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F766E).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(
+                '$memberCount',
+                style: const TextStyle(
+                  color: Color(0xFF0F766E),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              expanded
+                  ? Icons.keyboard_arrow_down_rounded
+                  : Icons.keyboard_arrow_up_rounded,
+              color: const Color(0xFF456063),
             ),
           ],
         ),

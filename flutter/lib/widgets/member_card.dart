@@ -16,8 +16,15 @@ class MemberCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.94),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: const BorderSide(color: Color(0x140F766E)),
+      ),
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         leading: CircleAvatar(
           backgroundColor:
               isSelf ? const Color(0xFF4A6CF7) : _color(member.deviceId),
@@ -30,7 +37,7 @@ class MemberCard extends StatelessWidget {
           ),
         ),
         title: Text(
-          member.name.isNotEmpty ? member.name : member.deviceId,
+          '${member.name.isNotEmpty ? member.name : member.deviceId}${isSelf ? '（我）' : ''}',
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Column(
@@ -52,12 +59,19 @@ class MemberCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  member.hasLocation
-                      ? '${member.lat.toStringAsFixed(4)}, ${member.lng.toStringAsFixed(4)}'
-                      : 'No location',
+                  member.online ? (member.offlineMode ? '离线模式' : '在线') : '离线',
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              member.hasLocation
+                  ? '${member.lat.toStringAsFixed(4)}, ${member.lng.toStringAsFixed(4)}'
+                  : '暂无位置信息',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
             if (member.battery >= 0) ...[
               const SizedBox(height: 2),
@@ -80,7 +94,7 @@ class MemberCard extends StatelessWidget {
         ),
         trailing: member.isOwner
             ? const Chip(
-                label: Text('Owner', style: TextStyle(fontSize: 10)),
+                label: Text('群主', style: TextStyle(fontSize: 10)),
                 visualDensity: VisualDensity.compact,
               )
             : null,

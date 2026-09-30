@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../src/config/app_config.dart';
 import '../src/providers/app_provider.dart';
 import '../src/services/prefs_service.dart';
-import '../src/config/app_config.dart';
 
 class SetupScreen extends StatefulWidget {
   const SetupScreen({super.key});
@@ -12,28 +13,26 @@ class SetupScreen extends StatefulWidget {
 }
 
 class _SetupScreenState extends State<SetupScreen> {
-  int _step = 0;
+  late final AppProvider _app;
   final _nameController = TextEditingController();
   final _codeController = TextEditingController();
+
+  int _step = 0;
   String _error = '';
+  bool _busy = false;
   bool _didNavigate = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final app = context.read<AppProvider>();
-      app.addListener(_onAppChanged);
-      _onAppChanged();
-    });
+    _app = context.read<AppProvider>();
+    _app.addListener(_onAppChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onAppChanged());
   }
 
   void _onAppChanged() {
     if (!mounted || _didNavigate) return;
-    if (context.read<AppProvider>().familyId.isNotEmpty) {
-      _goHome();
-    }
+    if (_app.familyId.isNotEmpty) _goHome();
   }
 
   void _goHome() {
@@ -44,7 +43,7 @@ class _SetupScreenState extends State<SetupScreen> {
 
   @override
   void dispose() {
-    context.read<AppProvider>().removeListener(_onAppChanged);
+    _app.removeListener(_onAppChanged);
     _nameController.dispose();
     _codeController.dispose();
     super.dispose();
@@ -54,54 +53,79 @@ class _SetupScreenState extends State<SetupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Setup'),
+        title: const Text('开始使用'),
         automaticallyImplyLeading: false,
       ),
-      body: Stepper(
-        currentStep: _step,
-        onStepContinue: _continueStep,
-        onStepCancel: _step > 0 ? () => setState(() => _step--) : null,
-        steps: [
-          Step(
-            title: const Text('Welcome'),
-            content: _buildWelcome(),
-            isActive: _step >= 0,
-          ),
-          Step(
-            title: const Text('Your Name'),
-            content: _buildNameStep(),
-            isActive: _step >= 1,
-          ),
-          Step(
-            title: const Text('Join Family'),
-            content: _buildFamilyStep(),
-            isActive: _step >= 2,
-          ),
-        ],
+      body: SafeArea(
+        child: Stepper(
+          currentStep: _step,
+          onStepContinue: _busy ? null : _continueStep,
+          onStepCancel:
+              _busy || _step == 0 ? null : () => setState(() => _step--),
+          controlsBuilder: (_, details) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 18),
+              child: Row(
+                children: [
+                  if (_step < 2)
+                    FilledButton(
+                      onPressed: _busy ? null : details.onStepContinue,
+                      child: const Text('继续'),
+                    ),
+                  if (_step > 0) ...[
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: _busy ? null : details.onStepCancel,
+                      child: const Text('上一步'),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+          steps: [
+            Step(
+              title: const Text('欢迎'),
+              content: _buildWelcome(),
+              isActive: _step >= 0,
+            ),
+            Step(
+              title: const Text('你的称呼'),
+              content: _buildNameStep(),
+              isActive: _step >= 1,
+            ),
+            Step(
+              title: const Text('家庭'),
+              content: _buildFamilyStep(),
+              isActive: _step >= 2,
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildWelcome() {
-    return Column(
+    return const Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.family_restroom, size: 80, color: Color(0xFF4A6CF7)),
-        const SizedBox(height: 24),
-        const Text(
-          'FamilyShare',
+        Icon(Icons.family_restroom, size: 80, color: Color(0xFF0F766E)),
+        SizedBox(height: 24),
+        Text(
+          '家庭共享',
           style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 8),
-        const Text(
-          'Share your location with family in real-time',
+        SizedBox(height: 8),
+        Text(
+          '与家人安全地实时共享位置',
           textAlign: TextAlign.center,
           style: TextStyle(color: Colors.grey),
         ),
-        const SizedBox(height: 16),
-        const Text(
-          'Features:\n• Real-time location sharing\n• Family members map\n• Track & ring devices\n• Private & secure',
+        SizedBox(height: 18),
+        Text(
+          '实时位置共享\n家庭成员地图\n远程刷新位置与设备响铃\n家庭数据独立管理',
           textAlign: TextAlign.center,
+          style: TextStyle(height: 1.7),
         ),
       ],
     );
@@ -112,23 +136,20 @@ class _SetupScreenState extends State<SetupScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         const Text(
-          'What should we call you?',
+          '家人应该如何称呼你？',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 16),
         TextField(
           controller: _nameController,
           decoration: const InputDecoration(
-            labelText: 'Your Name',
+            labelText: '你的名字',
             border: OutlineInputBorder(),
           ),
-          onChanged: (v) => setState(() => _error = ''),
+          textInputAction: TextInputAction.done,
+          onChanged: (_) => setState(() => _error = ''),
         ),
-        if (_error.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(_error, style: const TextStyle(color: Colors.red)),
-          ),
+        _errorText(),
       ],
     );
   }
@@ -138,38 +159,39 @@ class _SetupScreenState extends State<SetupScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         const Text(
-          'Join or Create a Family',
+          '创建或加入一个家庭',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 16),
         TextField(
           controller: _codeController,
           decoration: const InputDecoration(
-            labelText: 'Family Code (6 digits)',
+            labelText: '家庭码（6 位）',
             border: OutlineInputBorder(),
           ),
           textCapitalization: TextCapitalization.characters,
-          onChanged: (v) => setState(() => _error = ''),
+          onChanged: (_) => setState(() => _error = ''),
         ),
-        if (_error.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(_error, style: const TextStyle(color: Colors.red)),
-          ),
+        _errorText(),
         const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: _createFamily,
-                child: const Text('Create New Family'),
+                onPressed: _busy ? null : _createFamily,
+                child: const Text('创建家庭'),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Expanded(
-              child: ElevatedButton(
-                onPressed: _joinFamily,
-                child: const Text('Join Family'),
+              child: FilledButton(
+                onPressed: _busy ? null : _joinFamily,
+                child: _busy
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('加入家庭'),
               ),
             ),
           ],
@@ -178,76 +200,73 @@ class _SetupScreenState extends State<SetupScreen> {
     );
   }
 
-  void _continueStep() async {
-    switch (_step) {
-      case 0:
-        setState(() => _step++);
-        break;
-      case 1:
-        final name = _nameController.text.trim();
-        if (name.isEmpty) {
-          setState(() => _error = 'Please enter your name');
-          return;
-        }
-        PrefsService().setDeviceName(name);
-        AppConfig.setDeviceName(name);
-        setState(() => _step++);
-        break;
-      case 2:
-        final code = _codeController.text.trim();
-        if (code.isEmpty) {
-          setState(() => _error = 'Please enter a family code');
-          return;
-        }
-        final app = context.read<AppProvider>();
-        await app.joinFamily(code);
-        if (app.familyId.isNotEmpty) {
-          _goHome();
-        } else if (app.pendingJoinRequestId.isNotEmpty) {
-          setState(
-              () => _error = 'Request sent. Waiting for the family owner.');
-        } else {
-          setState(() =>
-              _error = 'Failed to join family. Check code and try again.');
-        }
-        break;
+  Widget _errorText() {
+    if (_error.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Text(_error, style: const TextStyle(color: Colors.red)),
+    );
+  }
+
+  void _continueStep() {
+    if (_step == 0) {
+      setState(() => _step = 1);
+      return;
     }
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      setState(() => _error = '请输入你的名字');
+      return;
+    }
+    PrefsService().setDeviceName(name);
+    AppConfig.setDeviceName(name);
+    setState(() {
+      _error = '';
+      _step = 2;
+    });
   }
 
   Future<void> _createFamily() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = 'Please enter your name first');
+      setState(() => _error = '请先输入你的名字');
       return;
     }
     PrefsService().setDeviceName(name);
     AppConfig.setDeviceName(name);
-    final app = context.read<AppProvider>();
-    await app.createFamily(name);
-    if (app.familyId.isNotEmpty) {
-      _goHome();
-    } else if (app.pendingJoinRequestId.isNotEmpty) {
-      setState(() => _error = 'Request sent. Waiting for the family owner.');
-    } else {
-      setState(() => _error = 'Failed to create family');
-    }
+    await _runFamilyAction(() => _app.createFamily(name), creating: true);
   }
 
   Future<void> _joinFamily() async {
     final code = _codeController.text.trim();
     if (code.isEmpty) {
-      setState(() => _error = 'Please enter a family code');
+      setState(() => _error = '请输入家庭码');
       return;
     }
-    final app = context.read<AppProvider>();
-    await app.joinFamily(code);
-    if (app.familyId.isNotEmpty) {
+    await _runFamilyAction(() => _app.joinFamily(code));
+  }
+
+  Future<void> _runFamilyAction(
+    Future<void> Function() action, {
+    bool creating = false,
+  }) async {
+    setState(() {
+      _busy = true;
+      _error = '';
+    });
+    await action();
+    if (!mounted) return;
+    if (_app.familyId.isNotEmpty) {
       _goHome();
-    } else if (app.pendingJoinRequestId.isNotEmpty) {
-      setState(() => _error = 'Request sent. Waiting for the family owner.');
-    } else {
-      setState(
-          () => _error = 'Failed to join family. Check code and try again.');
+      return;
     }
+    setState(() {
+      _busy = false;
+      if (_app.pendingJoinRequestId.isNotEmpty) {
+        _error = '申请已发送，正在等待群主处理。';
+      } else {
+        _error = creating ? '创建家庭失败，请稍后重试。' : '加入失败，请检查家庭码后重试。';
+      }
+    });
   }
 }

@@ -107,7 +107,7 @@ class _PreviewMap extends StatelessWidget {
           Positioned.fill(child: CustomPaint(painter: _MapGridPainter())),
           if (members.where((m) => m.hasLocation).isEmpty)
             const Center(
-              child: Text('Enable location to see your family map',
+              child: Text('开启定位后即可查看家庭地图',
                   style: TextStyle(color: Color(0xFF64748B))),
             )
           else
@@ -147,7 +147,11 @@ class _PreviewMap extends StatelessWidget {
                 },
               ),
             ),
-          const Positioned(left: 18, top: 88, child: _MapLegend()),
+          Positioned(
+            left: 18,
+            top: MediaQuery.paddingOf(context).top + 78,
+            child: const _MapLegend(),
+          ),
         ],
       ),
     );
@@ -194,7 +198,7 @@ class _PreviewMarker extends StatelessWidget {
               boxShadow: const [
                 BoxShadow(color: Color(0x22000000), blurRadius: 4)
               ]),
-          child: Text(member.name.isEmpty ? 'Member' : member.name,
+          child: Text(member.name.isEmpty ? '家庭成员' : member.name,
               style:
                   const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
         ),
@@ -217,7 +221,7 @@ class _MapLegend extends StatelessWidget {
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.my_location, size: 14, color: Color(0xFF3563E9)),
           SizedBox(width: 5),
-          Text('Live family map',
+          Text('家庭实时位置',
               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
         ]),
       ),
