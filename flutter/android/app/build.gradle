@@ -24,6 +24,16 @@ android {
         buildConfigField 'String', 'API_TOKEN', "\"${apiToken}\""
     }
 
+    // AMap bundles optional location implementations that are not present in
+    // the lightweight SDK package. Keep release builds reliable until a
+    // project-specific R8 keep configuration is added.
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
