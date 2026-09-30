@@ -22,6 +22,8 @@ class PrefsService {
   bool get trackEnabled => _prefs.getBool('track_enabled') ?? false;
   int get trackIntervalMs =>
       _prefs.getInt('track_interval_ms') ?? (5 * 60 * 1000);
+  int get effectiveReportIntervalMs =>
+      trackEnabled ? trackIntervalMs : 30 * 60 * 1000;
   bool get ringEnabled => _prefs.getBool('ring_enabled') ?? true;
   String get themeMode => _prefs.getString('theme_mode') ?? 'system';
   double get lastLat => _prefs.getDouble('last_lat') ?? 0.0;

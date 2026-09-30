@@ -16,16 +16,12 @@ class ApiResponse {
 }
 
 class ApiService {
-  String baseUrl;
+  final String baseUrl;
   final String token;
   final http.Client _client = http.Client();
 
   ApiService(String baseUrl, this.token)
       : baseUrl = baseUrl.replaceFirst(RegExp(r'/+$'), '');
-
-  void setBaseUrl(String url) {
-    baseUrl = url.trim().replaceFirst(RegExp(r'/+$'), '');
-  }
 
   Future<ApiResponse> get(String path) async {
     try {

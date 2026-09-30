@@ -4,7 +4,6 @@ plugins {
 }
 
 def amapKey = project.findProperty('AMAP_KEY') ?: 'YOUR_AMAP_KEY_HERE'
-def serverUrl = project.findProperty('SERVER_URL') ?: 'http://10.0.2.2:3000'
 def apiToken = project.findProperty('API_TOKEN') ?: 'mdi9a9083df9bnq97ssdbibbu7d98'
 
 android {
@@ -21,7 +20,7 @@ android {
         ndk { abiFilters 'armeabi-v7a', 'arm64-v8a' }
         manifestPlaceholders = [AMAP_KEY: amapKey]
         buildConfigField 'String', 'AMAP_KEY', "\"${amapKey}\""
-        buildConfigField 'String', 'SERVER_URL', "\"${serverUrl}\""
+        buildConfigField 'String', 'SERVER_URL', '"https://familyshare.lawlovesimone.site"'
         buildConfigField 'String', 'API_TOKEN', "\"${apiToken}\""
     }
 

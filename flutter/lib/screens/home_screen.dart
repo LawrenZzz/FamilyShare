@@ -39,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onAppChanged() {
     if (!mounted || _redirecting || _app?.familyId.isNotEmpty != false) return;
     _redirecting = true;
+    context.read<UiProvider>().clearTrajectory();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _app?.familyId.isEmpty == true) {
         Navigator.of(context).pushReplacementNamed('/setup');
@@ -69,6 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const Positioned.fill(child: HomeMap()),
             _buildTopBar(context),
+            _buildTrajectoryIndicator(context),
             const Positioned(
               bottom: 0,
               left: 0,
@@ -156,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  color: scheme.onSurfaceVariant,
+                                  color: controlColor.withValues(alpha: 0.88),
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -215,6 +217,53 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildTrajectoryIndicator(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Positioned(
+      left: 16,
+      top: MediaQuery.paddingOf(context).top + 82,
+      child: Consumer2<UiProvider, AppProvider>(
+        builder: (_, ui, app, __) {
+          final id = ui.trajectoryDeviceId;
+          if (id == null) return const SizedBox.shrink();
+          final members = app.members.where((member) => member.deviceId == id);
+          final name = members.isEmpty || members.first.name.isEmpty
+              ? '成员'
+              : members.first.name;
+          return Material(
+            color: scheme.surface.withValues(alpha: 0.96),
+            elevation: 3,
+            borderRadius: BorderRadius.circular(8),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 280),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12, right: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.route_rounded, size: 18, color: scheme.primary),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text('$name的轨迹',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: scheme.onSurface)),
+                    ),
+                    IconButton(
+                      tooltip: '隐藏轨迹',
+                      onPressed: ui.clearTrajectory,
+                      icon: const Icon(Icons.close_rounded, size: 18),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

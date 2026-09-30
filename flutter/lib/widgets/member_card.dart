@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../src/models/member.dart';
+import 'member_avatar.dart';
 
 class MemberCard extends StatelessWidget {
   final Member member;
@@ -31,17 +32,7 @@ class MemberCard extends StatelessWidget {
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        leading: CircleAvatar(
-          backgroundColor:
-              isSelf ? const Color(0xFF4A6CF7) : _color(member.deviceId),
-          child: Text(
-            member.name.isNotEmpty ? member.name[0].toUpperCase() : '?',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
+        leading: MemberAvatar(member: member),
         title: Text(
           '${member.name.isNotEmpty ? member.name : member.deviceId}${isSelf ? '（我）' : ''}',
           style: TextStyle(
@@ -122,18 +113,6 @@ class MemberCard extends StatelessWidget {
         onTap: onTap,
       ),
     );
-  }
-
-  Color _color(String id) {
-    final colors = const [
-      Color(0xFFFF6B6B),
-      Color(0xFF4ECDC4),
-      Color(0xFF45B7D1),
-      Color(0xFF96CEB4),
-      Color(0xFFFFEAA7),
-      Color(0xFFDDA0DD),
-    ];
-    return colors[id.hashCode.abs() % colors.length];
   }
 
   Color _batteryColor(int battery) {

@@ -43,6 +43,14 @@ public final class AmapMapViewFactory extends PlatformViewFactory {
         if (current != null) current.recenter();
     }
 
+    public void focusTrajectory(String deviceId) {
+        if (current != null) current.focusTrajectory(deviceId);
+    }
+
+    public void focusMember(String deviceId) {
+        if (current != null) current.focusMember(deviceId);
+    }
+
     public void onResume() {
         if (current != null) current.onResume();
     }

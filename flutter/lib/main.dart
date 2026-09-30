@@ -36,7 +36,9 @@ Future<void> main() async {
     final prefs = PrefsService();
     final hasStoredDeviceId = prefs.deviceId.isNotEmpty;
     if (!hasStoredDeviceId) {
-      AppConfig.setDeviceId(const Uuid().v4());
+      final id = const Uuid().v4();
+      prefs.setDeviceId(id);
+      AppConfig.setDeviceId(id);
     } else {
       AppConfig.setDeviceId(prefs.deviceId);
     }

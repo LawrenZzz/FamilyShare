@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../src/config/app_config.dart';
 import '../src/providers/app_provider.dart';
 import '../src/services/prefs_service.dart';
+import '../widgets/permission_guide.dart';
 
 class SetupScreen extends StatefulWidget {
   const SetupScreen({super.key});
@@ -67,7 +68,7 @@ class _SetupScreenState extends State<SetupScreen> {
               padding: const EdgeInsets.only(top: 18),
               child: Row(
                 children: [
-                  if (_step < 2)
+                  if (_step < 3)
                     FilledButton(
                       onPressed: _busy ? null : details.onStepContinue,
                       child: const Text('继续'),
@@ -95,9 +96,14 @@ class _SetupScreenState extends State<SetupScreen> {
               isActive: _step >= 1,
             ),
             Step(
+              title: const Text('位置共享权限'),
+              content: const PermissionGuide(),
+              isActive: _step >= 2,
+            ),
+            Step(
               title: const Text('家庭'),
               content: _buildFamilyStep(),
-              isActive: _step >= 2,
+              isActive: _step >= 3,
             ),
           ],
         ),
@@ -211,6 +217,10 @@ class _SetupScreenState extends State<SetupScreen> {
   void _continueStep() {
     if (_step == 0) {
       setState(() => _step = 1);
+      return;
+    }
+    if (_step == 2) {
+      setState(() => _step = 3);
       return;
     }
     final name = _nameController.text.trim();

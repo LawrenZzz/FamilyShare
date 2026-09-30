@@ -18,6 +18,15 @@ Future<void> recenterFamilyMap() async {
   }
 }
 
+Future<void> focusFamilyMember(String deviceId) async {
+  if (defaultTargetPlatform != TargetPlatform.android) return;
+  try {
+    await _mapChannel.invokeMethod('focusMember', deviceId);
+  } on MissingPluginException {
+    // Preview maps do not expose a native camera.
+  }
+}
+
 class HomeMap extends StatefulWidget {
   const HomeMap({super.key});
 
@@ -27,6 +36,7 @@ class HomeMap extends StatefulWidget {
 
 class _HomeMapState extends State<HomeMap> {
   String _lastSignature = '';
+  String? _lastTrajectoryDeviceId;
 
   @override
   void initState() {
@@ -36,19 +46,24 @@ class _HomeMapState extends State<HomeMap> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppProvider>(
-      builder: (_, app, __) {
+    return Consumer2<AppProvider, UiProvider>(
+      builder: (_, app, ui, __) {
         final signature = app.members
-            .map((m) => '${m.deviceId}:${m.lat}:${m.lng}:${m.name}')
-            .join('|');
+                .map((m) =>
+                    '${m.deviceId}:${m.lat}:${m.lng}:${m.name}:${m.avatar}:'
+                    '${m.track}:${m.trajectory.length}:'
+                    '${m.trajectory.isEmpty ? 0 : m.trajectory.last.ts}')
+                .join('|') +
+            ':${ui.trajectoryDeviceId ?? ''}';
         if (defaultTargetPlatform == TargetPlatform.android) {
-          _syncNativeMarkers(app.members, signature);
+          _syncNativeMarkers(app.members, signature, ui.trajectoryDeviceId);
           return AndroidView(
             viewType: 'familyshare/amap',
             onPlatformViewCreated: (id) {
               bootLog('Map', 'Android platform view created; id=$id');
               _lastSignature = '';
-              _syncNativeMarkers(app.members, signature);
+              _lastTrajectoryDeviceId = null;
+              _syncNativeMarkers(app.members, signature, ui.trajectoryDeviceId);
               MethodChannel('familyshare/map/$id')
                   .setMethodCallHandler((call) async {
                 if (call.method == 'memberTap' &&
@@ -67,9 +82,13 @@ class _HomeMapState extends State<HomeMap> {
     );
   }
 
-  void _syncNativeMarkers(List<Member> members, String signature) {
+  void _syncNativeMarkers(
+      List<Member> members, String signature, String? trajectoryDeviceId) {
     if (signature == _lastSignature) return;
     _lastSignature = signature;
+    final focusRoute = trajectoryDeviceId != null &&
+        trajectoryDeviceId != _lastTrajectoryDeviceId;
+    _lastTrajectoryDeviceId = trajectoryDeviceId;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       try {
@@ -83,8 +102,16 @@ class _HomeMapState extends State<HomeMap> {
                       'lat': m.lat,
                       'lng': m.lng,
                       'address': m.address,
+                      'track': m.track,
+                      'trajectory':
+                          m.trajectory.map((p) => p.mapPoint).toList(),
+                      'showTrajectory': m.deviceId == trajectoryDeviceId,
+                      'avatar': m.avatar,
                     })
                 .toList());
+        if (focusRoute) {
+          await _mapChannel.invokeMethod('focusTrajectory', trajectoryDeviceId);
+        }
       } on MissingPluginException {
         bootLog('Map', 'native map plugin is unavailable');
       } on PlatformException catch (e) {

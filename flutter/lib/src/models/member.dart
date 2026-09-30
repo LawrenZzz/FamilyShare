@@ -1,5 +1,31 @@
 import 'dart:convert';
 
+class TrackPoint {
+  final double lat;
+  final double lng;
+  final double accuracy;
+  final int ts;
+  final String address;
+
+  const TrackPoint({
+    required this.lat,
+    required this.lng,
+    required this.accuracy,
+    required this.ts,
+    required this.address,
+  });
+
+  factory TrackPoint.fromJson(Map<String, dynamic> value) => TrackPoint(
+        lat: (value['lat'] as num?)?.toDouble() ?? 0,
+        lng: (value['lng'] as num?)?.toDouble() ?? 0,
+        accuracy: (value['accuracy'] as num?)?.toDouble() ?? 0,
+        ts: (value['ts'] as num?)?.toInt() ?? 0,
+        address: value['address'] as String? ?? '',
+      );
+
+  Map<String, double> get mapPoint => {'lat': lat, 'lng': lng};
+}
+
 class Member {
   final String deviceId;
   String name;
@@ -7,6 +33,7 @@ class Member {
   bool offlineMode;
   bool isOwner;
   bool track;
+  int trackIntervalMs;
   bool hasLocation;
   double lat;
   double lng;
@@ -16,7 +43,7 @@ class Member {
   String network;
   String address;
   String avatar;
-  List<Map<String, double>> trajectory;
+  List<TrackPoint> trajectory;
 
   Member({
     required this.deviceId,
@@ -25,6 +52,7 @@ class Member {
     this.offlineMode = false,
     this.isOwner = false,
     this.track = false,
+    this.trackIntervalMs = 300000,
     this.hasLocation = false,
     this.lat = 0,
     this.lng = 0,
@@ -43,6 +71,7 @@ class Member {
     bool? offlineMode,
     bool? isOwner,
     bool? track,
+    int? trackIntervalMs,
     bool? hasLocation,
     double? lat,
     double? lng,
@@ -52,7 +81,7 @@ class Member {
     String? network,
     String? address,
     String? avatar,
-    List<Map<String, double>>? trajectory,
+    List<TrackPoint>? trajectory,
   }) {
     return Member(
       deviceId: deviceId,
@@ -61,6 +90,7 @@ class Member {
       offlineMode: offlineMode ?? this.offlineMode,
       isOwner: isOwner ?? this.isOwner,
       track: track ?? this.track,
+      trackIntervalMs: trackIntervalMs ?? this.trackIntervalMs,
       hasLocation: hasLocation ?? this.hasLocation,
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
@@ -82,6 +112,7 @@ class Member {
         rawLocation is Map ? Map<String, dynamic>.from(rawLocation) : json;
     final rawTrajectory = json['trajectory'];
     final traj = rawTrajectory is List ? rawTrajectory : const <dynamic>[];
+    final storedInterval = (json['trackInterval'] as num?)?.toInt() ?? 0;
     return Member(
       deviceId: json['deviceId'] as String? ?? '',
       name: json['name'] as String? ?? '',
@@ -89,6 +120,7 @@ class Member {
       offlineMode: json['offlineMode'] as bool? ?? false,
       isOwner: json['isOwner'] as bool? ?? false,
       track: json['track'] as bool? ?? false,
+      trackIntervalMs: storedInterval > 0 ? storedInterval : 300000,
       hasLocation: loc['lat'] != null,
       lat: (loc['lat'] as num?)?.toDouble() ?? 0,
       lng: (loc['lng'] as num?)?.toDouble() ?? 0,
@@ -98,13 +130,11 @@ class Member {
       network: loc['network'] as String? ?? '',
       address: loc['address'] as String? ?? '',
       avatar: json['avatar'] as String? ?? '',
-      trajectory: traj.whereType<Map>().map((p) {
-        final point = Map<String, dynamic>.from(p);
-        return <String, double>{
-          'lat': (point['lat'] as num?)?.toDouble() ?? 0,
-          'lng': (point['lng'] as num?)?.toDouble() ?? 0,
-        };
-      }).toList(),
+      trajectory: traj
+          .whereType<Map>()
+          .map((p) => TrackPoint.fromJson(Map<String, dynamic>.from(p)))
+          .where((p) => p.lat != 0 || p.lng != 0)
+          .toList(),
     );
   }
 

@@ -3,9 +3,9 @@ import 'package:flutter/foundation.dart';
 import '../services/api_service.dart';
 import '../services/ws_service.dart';
 import '../services/location_service.dart';
+import '../services/device_bridge.dart';
 import '../services/prefs_service.dart';
 import '../models/family.dart';
-import '../config/app_config.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 
@@ -35,7 +35,8 @@ class AppProvider extends ChangeNotifier {
   void setApiService(ApiService api) => _apiService = api;
   void setWsService(WsService ws) {
     _wsService = ws;
-    _wsService?.addConnectListener(() => setStatus('online'));
+    _wsService?.addConnectListener(
+        () => setStatus(_prefs.offlineMode ? 'offline' : 'online'));
     _wsService?.addDisconnectListener(() => setStatus('connecting'));
   }
 
@@ -64,14 +65,18 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateMyLocation(double lat, double lng) {
+  void updateMyLocation(LocationFix fix) {
     final idx = _members.indexWhere((m) => m.deviceId == deviceId);
     if (idx >= 0) {
       _members[idx] = _members[idx].copyWith(
         hasLocation: true,
-        lat: lat,
-        lng: lng,
-        ts: DateTime.now().millisecondsSinceEpoch,
+        lat: fix.lat,
+        lng: fix.lng,
+        accuracy: fix.accuracy,
+        ts: fix.ts,
+        battery: fix.battery,
+        network: fix.network,
+        address: fix.address,
       );
     } else {
       _members.add(Member(
@@ -79,17 +84,40 @@ class AppProvider extends ChangeNotifier {
         name: _prefs.deviceName,
         online: true,
         hasLocation: true,
-        lat: lat,
-        lng: lng,
-        ts: DateTime.now().millisecondsSinceEpoch,
+        lat: fix.lat,
+        lng: fix.lng,
+        accuracy: fix.accuracy,
+        ts: fix.ts,
+        battery: fix.battery,
+        network: fix.network,
+        address: fix.address,
       ));
     }
-    _prefs.saveLastLocation(lat, lng, DateTime.now().millisecondsSinceEpoch);
+    _prefs.saveLastLocation(fix.lat, fix.lng, fix.ts);
     notifyListeners();
   }
 
   Future<void> locateMe() async {
     await _locationService?.locateMe();
+  }
+
+  Future<bool?> uploadMyAvatar() async {
+    if (_apiService == null || familyId.isEmpty || deviceId.isEmpty)
+      return false;
+    try {
+      final jpeg = await DeviceBridge().pickAvatar();
+      if (jpeg == null) return null;
+      final result = await _apiService!.uploadAvatar(deviceId, familyId, jpeg);
+      if (!result.ok) {
+        debugPrint('Avatar upload failed: ${result.error}');
+        return false;
+      }
+      refreshMembers();
+      return true;
+    } catch (error) {
+      debugPrint('Avatar picker failed: $error');
+      return false;
+    }
   }
 
   Future<void> startLocationSharing() async {
@@ -103,6 +131,17 @@ class AppProvider extends ChangeNotifier {
       try {
         _members.clear();
         _members.addAll(Member.fromJsonList(result.data));
+        final own = _members.where((member) => member.deviceId == deviceId);
+        if (own.isNotEmpty) {
+          final member = own.first;
+          if (_prefs.trackEnabled != member.track ||
+              _prefs.trackIntervalMs != member.trackIntervalMs) {
+            _prefs.setTrackEnabled(member.track);
+            _prefs.setTrackIntervalMs(member.trackIntervalMs);
+            final location = _locationService;
+            if (location != null) unawaited(location.updateInterval());
+          }
+        }
         notifyListeners();
       } catch (e) {
         debugPrint('parse members error: $e');
@@ -116,6 +155,7 @@ class AppProvider extends ChangeNotifier {
         final m = Member.fromJson(data);
         final idx = _members.indexWhere((e) => e.deviceId == m.deviceId);
         if (idx >= 0) {
+          final current = _members[idx];
           _members[idx] = _members[idx].copyWith(
             name: m.name.isEmpty ? null : m.name,
             hasLocation: m.hasLocation,
@@ -126,6 +166,9 @@ class AppProvider extends ChangeNotifier {
             battery: m.battery,
             network: m.network,
             address: m.address,
+            trajectory: current.track && m.hasLocation
+                ? _appendTrackPoint(current, TrackPoint.fromJson(data))
+                : null,
           );
         } else {
           _members.add(m.copyWith(online: true));
@@ -150,6 +193,7 @@ class AppProvider extends ChangeNotifier {
       case 'member-removed':
         final removedId = data['deviceId'] as String? ?? '';
         if (removedId == deviceId) {
+          _locationService?.stop();
           _prefs.setFamilyId('');
           _currentFamily = null;
           _members.clear();
@@ -172,6 +216,7 @@ class AppProvider extends ChangeNotifier {
       case 'family-disbanded':
         final fid = data['familyId'] as String? ?? '';
         if (fid == familyId) {
+          _locationService?.stop();
           _prefs.setFamilyId('');
           _currentFamily = null;
           _members.clear();
@@ -194,13 +239,24 @@ class AppProvider extends ChangeNotifier {
         break;
       case 'track-changed':
         final did = data['deviceId'] as String? ?? '';
+        final enabled = data['track'] as bool? ?? false;
+        final interval = (data['intervalMs'] as num?)?.toInt() ?? 0;
         final idx = _members.indexWhere((e) => e.deviceId == did);
         if (idx >= 0) {
           _members[idx] = _members[idx].copyWith(
-            track: data['track'] as bool?,
+            track: enabled,
+            trackIntervalMs: interval > 0 ? interval : null,
+            trajectory: enabled ? null : const [],
           );
           notifyListeners();
         }
+        if (did == deviceId) {
+          _prefs.setTrackEnabled(enabled);
+          if (interval > 0) _prefs.setTrackIntervalMs(interval);
+          final location = _locationService;
+          if (location != null) unawaited(location.updateInterval());
+        }
+        refreshMembers();
         break;
       case 'owner-changed':
         final ownerId = data['deviceId'] as String? ?? '';
@@ -332,6 +388,7 @@ class AppProvider extends ChangeNotifier {
       'familyId': _currentFamily!.familyId,
       'ownerDeviceId': deviceId,
     });
+    _locationService?.stop();
     _prefs.setFamilyId('');
     _members.clear();
     _currentFamily = null;
@@ -374,27 +431,44 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setTrackEnabled(bool track, int intervalMs) async {
-    if (_apiService == null || _currentFamily == null) return;
-    await _apiService!.post('/api/member/track', {
+  List<TrackPoint> _appendTrackPoint(Member member, TrackPoint point) {
+    final points = member.trajectory;
+    if (points.isNotEmpty && points.last.ts == point.ts) return points;
+    final next = [...points, point];
+    return next.length > 300 ? next.sublist(next.length - 300) : next;
+  }
+
+  Future<bool> setMemberTrack(
+      String targetDeviceId, bool track, int intervalMs) async {
+    if (_apiService == null || _currentFamily == null) return false;
+    final result = await _apiService!.post('/api/member/track', {
       'familyId': _currentFamily!.familyId,
       'ownerDeviceId': deviceId,
-      'targetDeviceId': deviceId,
+      'targetDeviceId': targetDeviceId,
       'track': track,
       'intervalMs': intervalMs,
     });
-    _prefs.setTrackEnabled(track);
-    _prefs.setTrackIntervalMs(intervalMs);
+    if (!result.ok) return false;
+    final idx = _members.indexWhere((m) => m.deviceId == targetDeviceId);
+    if (idx >= 0) {
+      _members[idx] = _members[idx].copyWith(
+        track: track,
+        trackIntervalMs: intervalMs,
+        trajectory: track ? null : const [],
+      );
+    }
+    if (targetDeviceId == deviceId) {
+      _prefs.setTrackEnabled(track);
+      _prefs.setTrackIntervalMs(intervalMs);
+      await _locationService?.updateInterval();
+    }
     notifyListeners();
+    refreshMembers();
+    return true;
   }
 
-  Future<void> changeServer(String url) async {
-    AppConfig.applyServer(url);
-    _apiService?.setBaseUrl(AppConfig.serverUrl);
-    _wsService?.disconnect();
-    await Future.delayed(const Duration(seconds: 1));
-    _wsService?.connect();
-  }
+  Future<bool> setTrackEnabled(bool track, int intervalMs) =>
+      setMemberTrack(deviceId, track, intervalMs);
 
   void dispose() {
     _joinPollTimer?.cancel();

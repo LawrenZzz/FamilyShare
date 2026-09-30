@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../src/providers/app_provider.dart';
 import '../src/providers/ui_provider.dart';
 import 'member_card.dart';
+import 'home_map.dart';
 
 class MemberList extends StatelessWidget {
   const MemberList({super.key});
@@ -24,8 +25,14 @@ class MemberList extends StatelessWidget {
             return MemberCard(
               member: member,
               isSelf: member.deviceId == app.deviceId,
-              onTap: () =>
-                  context.read<UiProvider>().openDetail(member.deviceId),
+              onTap: () {
+                focusFamilyMember(member.deviceId);
+                final ui = context.read<UiProvider>();
+                if (ui.trajectoryDeviceId != member.deviceId) {
+                  ui.clearTrajectory();
+                }
+                ui.openDetail(member.deviceId);
+              },
             );
           },
         );

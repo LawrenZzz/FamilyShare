@@ -8,29 +8,25 @@ import '../src/providers/app_provider.dart';
 import '../src/providers/ui_provider.dart';
 import '../src/services/prefs_service.dart';
 import '../src/theme/app_theme.dart';
+import 'permission_guide.dart';
 
 class OverflowMenu extends StatelessWidget {
   const OverflowMenu({super.key});
 
   static Future<void> show(BuildContext context) {
     final theme = Theme.of(context);
-    final overNativeMap =
-        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
-    return GlassModalSheet.show<void>(
+    return showModalBottomSheet<void>(
       context: context,
-      initialState: GlassSheetState.half,
-      halfSize: 0.78,
-      fullSize: 0.92,
-      quality: GlassQuality.premium,
-      settings: FamilyShareTheme.overlayGlassSettings(context),
-      expandedColor: theme.colorScheme.surface,
-      platformViewBackdrop: overNativeMap,
-      barrierColor: theme.colorScheme.scrim.withValues(
-        alpha: theme.brightness == Brightness.dark ? 0.5 : 0.26,
-      ),
-      builder: (_) => FractionallySizedBox(
-        heightFactor: 1,
-        child: _MoreActionsSheet(parentContext: context),
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: theme.colorScheme.surface,
+      builder: (sheetContext) => Material(
+        color: theme.colorScheme.surface,
+        child: SizedBox(
+          height: MediaQuery.sizeOf(sheetContext).height * 0.78,
+          child: _MoreActionsSheet(parentContext: context),
+        ),
       ),
     );
   }
@@ -117,17 +113,17 @@ class _MoreActionsSheet extends StatelessWidget {
               ),
               _tile(
                 context,
+                icon: Icons.account_circle_rounded,
+                title: '我的头像',
+                subtitle: '从相册选择并上传头像',
+                onTap: () => _open(context, _uploadAvatar),
+              ),
+              _tile(
+                context,
                 icon: Icons.swap_horiz_rounded,
                 title: '切换家庭',
                 subtitle: '查看当前家庭或创建、加入家庭',
                 onTap: () => _open(context, _showSwitchFamily),
-              ),
-              _tile(
-                context,
-                icon: Icons.dns_rounded,
-                title: '服务器',
-                subtitle: '更改家庭共享服务器地址',
-                onTap: () => _open(context, _showChangeServer),
               ),
               SwitchListTile(
                 secondary: const Icon(Icons.visibility_off_rounded),
@@ -145,6 +141,13 @@ class _MoreActionsSheet extends StatelessWidget {
                 title: '位置追踪',
                 subtitle: '设置持续定位和上报频率',
                 onTap: () => _open(context, _showTrackOptions),
+              ),
+              _tile(
+                context,
+                icon: Icons.admin_panel_settings_rounded,
+                title: '权限检查',
+                subtitle: '定位、通知、电池和自启动设置',
+                onTap: () => _open(context, _showPermissionGuide),
               ),
               _tile(
                 context,
@@ -265,6 +268,14 @@ class _MoreActionsSheet extends StatelessWidget {
     );
   }
 
+  void _uploadAvatar(BuildContext context) async {
+    final result = await context.read<AppProvider>().uploadMyAvatar();
+    if (!context.mounted || result == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(result ? '头像已上传' : '头像上传失败，请稍后重试')),
+    );
+  }
+
   void _showSwitchFamily(BuildContext context) {
     showDialog<void>(
       context: context,
@@ -272,17 +283,27 @@ class _MoreActionsSheet extends StatelessWidget {
     );
   }
 
-  void _showChangeServer(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => const ChangeServerDialog(),
-    );
-  }
-
   void _showTrackOptions(BuildContext context) {
     showDialog<void>(
       context: context,
       builder: (_) => const TrackOptionsDialog(),
+    );
+  }
+
+  void _showPermissionGuide(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('权限检查'),
+        scrollable: true,
+        content: const PermissionGuide(),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('完成'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -411,56 +432,10 @@ class SwitchFamilyDialog extends StatelessWidget {
   }
 }
 
-class ChangeServerDialog extends StatefulWidget {
-  const ChangeServerDialog({super.key});
-
-  @override
-  State<ChangeServerDialog> createState() => _ChangeServerDialogState();
-}
-
-class _ChangeServerDialogState extends State<ChangeServerDialog> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('更改服务器'),
-      content: TextField(
-        controller: _controller,
-        keyboardType: TextInputType.url,
-        decoration: const InputDecoration(
-          labelText: '服务器地址',
-          hintText: 'https://example.com',
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: () {
-            final url = _controller.text.trim();
-            if (url.isNotEmpty) {
-              context.read<AppProvider>().changeServer(url);
-              Navigator.pop(context);
-            }
-          },
-          child: const Text('应用'),
-        ),
-      ],
-    );
-  }
-}
-
 class TrackOptionsDialog extends StatefulWidget {
-  const TrackOptionsDialog({super.key});
+  const TrackOptionsDialog({super.key, this.deviceId});
+
+  final String? deviceId;
 
   @override
   State<TrackOptionsDialog> createState() => _TrackOptionsDialogState();
@@ -469,32 +444,89 @@ class TrackOptionsDialog extends StatefulWidget {
 class _TrackOptionsDialogState extends State<TrackOptionsDialog> {
   late bool _enabled;
   late int _selectedInterval;
+  bool _saving = false;
+  final _customController = TextEditingController();
+  String? _customError;
+
+  String get _targetId =>
+      widget.deviceId ?? context.read<AppProvider>().deviceId;
 
   @override
   void initState() {
     super.initState();
     final prefs = PrefsService();
-    _enabled = prefs.trackEnabled;
-    _selectedInterval = (prefs.trackIntervalMs / 60000).round().clamp(1, 15);
+    final app = context.read<AppProvider>();
+    final targetId = widget.deviceId ?? app.deviceId;
+    final matches = app.members.where((member) => member.deviceId == targetId);
+    final member = matches.isEmpty ? null : matches.first;
+    _enabled = member?.track ?? prefs.trackEnabled;
+    _selectedInterval =
+        ((member?.trackIntervalMs ?? prefs.trackIntervalMs) / 60000)
+            .round()
+            .clamp(1, 1440);
+    if (![1, 3, 5, 10, 15].contains(_selectedInterval)) {
+      _customController.text = '$_selectedInterval';
+    }
+  }
+
+  @override
+  void dispose() {
+    _customController.dispose();
+    super.dispose();
+  }
+
+  void _applyCustom() {
+    final minutes = int.tryParse(_customController.text.trim());
+    if (minutes == null || minutes < 1 || minutes > 1440) {
+      setState(() => _customError = '请输入 1 至 1440 分钟');
+      return;
+    }
+    setState(() => _customError = null);
+    _save(true, minutes);
+  }
+
+  Future<void> _save(bool enabled, int minutes) async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    final ok = await context.read<AppProvider>().setMemberTrack(
+          _targetId,
+          enabled,
+          minutes * 60000,
+        );
+    if (!mounted) return;
+    setState(() {
+      _saving = false;
+      if (ok) {
+        _enabled = enabled;
+        _selectedInterval = minutes;
+      }
+    });
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('轨迹设置失败，请检查网络后重试')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final app = context.read<AppProvider>();
+    final matches = app.members.where((member) => member.deviceId == _targetId);
+    final name = matches.isEmpty ? '我的' : matches.first.name;
     return AlertDialog(
-      title: const Text('位置追踪'),
+      title: Text('${name.isEmpty ? '成员' : name}的轨迹记录'),
+      scrollable: true,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('启用持续追踪'),
+            title: const Text('记录位置轨迹'),
+            subtitle: const Text('关闭后仍会定期共享当前位置'),
             value: _enabled,
-            onChanged: (value) {
-              setState(() => _enabled = value);
-              app.setTrackEnabled(value, _selectedInterval * 60 * 1000);
-            },
+            onChanged:
+                _saving ? null : (value) => _save(value, _selectedInterval),
           ),
           const SizedBox(height: 12),
           const Text('位置上报间隔'),
@@ -506,15 +538,27 @@ class _TrackOptionsDialogState extends State<TrackOptionsDialog> {
               return ChoiceChip(
                 label: Text('$minutes 分钟'),
                 selected: _selectedInterval == minutes,
-                onSelected: (_) {
-                  setState(() {
-                    _selectedInterval = minutes;
-                    _enabled = true;
-                  });
-                  app.setTrackEnabled(true, minutes * 60 * 1000);
-                },
+                onSelected: _saving ? null : (_) => _save(true, minutes),
               );
             }).toList(),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _customController,
+            enabled: !_saving,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            onSubmitted: (_) => _applyCustom(),
+            decoration: InputDecoration(
+              labelText: '自定义间隔（分钟）',
+              errorText: _customError,
+              border: const OutlineInputBorder(),
+              suffixIcon: IconButton(
+                tooltip: '应用自定义间隔',
+                onPressed: _saving ? null : _applyCustom,
+                icon: const Icon(Icons.check_rounded),
+              ),
+            ),
           ),
         ],
       ),
@@ -551,53 +595,53 @@ class _SettingsDialogState extends State<_SettingsDialog> {
   Widget build(BuildContext context) {
     final ui = context.watch<UiProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GlassDialog(
-      title: '设置',
-      maxWidth: 380,
-      settings: FamilyShareTheme.overlayGlassSettings(context),
-      quality: GlassQuality.premium,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            secondary: Icon(
-              isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+    return AlertDialog(
+      title: const Text('设置'),
+      scrollable: true,
+      content: SizedBox(
+        width: 350,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              secondary: Icon(
+                isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+              ),
+              title: const Text('深色模式'),
+              subtitle: Text(isDark ? '减少夜间屏幕亮度' : '使用明亮清晰的界面'),
+              value: isDark,
+              onChanged: ui.setDarkMode,
             ),
-            title: const Text('深色模式'),
-            subtitle: Text(isDark ? '减少夜间屏幕亮度' : '使用明亮清晰的界面'),
-            value: isDark,
-            onChanged: ui.setDarkMode,
-          ),
-          const Divider(),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            secondary: const Icon(Icons.visibility_off_rounded),
-            title: const Text('离线模式'),
-            subtitle: const Text('暂停上传当前位置'),
-            value: _offline,
-            onChanged: (value) {
-              setState(() => _offline = value);
-              context.read<AppProvider>().setOfflineMode(value);
-            },
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            secondary: const Icon(Icons.notifications_active_rounded),
-            title: const Text('允许设备响铃'),
-            value: _ringEnabled,
-            onChanged: (value) {
-              setState(() => _ringEnabled = value);
-              PrefsService().setRingEnabled(value);
-            },
-          ),
-        ],
+            const Divider(),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              secondary: const Icon(Icons.visibility_off_rounded),
+              title: const Text('离线模式'),
+              subtitle: const Text('暂停上传当前位置'),
+              value: _offline,
+              onChanged: (value) {
+                setState(() => _offline = value);
+                context.read<AppProvider>().setOfflineMode(value);
+              },
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              secondary: const Icon(Icons.notifications_active_rounded),
+              title: const Text('允许设备响铃'),
+              value: _ringEnabled,
+              onChanged: (value) {
+                setState(() => _ringEnabled = value);
+                PrefsService().setRingEnabled(value);
+              },
+            ),
+          ],
+        ),
       ),
       actions: [
-        GlassDialogAction(
-          label: '完成',
-          isPrimary: true,
+        TextButton(
           onPressed: () => Navigator.pop(context),
+          child: const Text('完成'),
         ),
       ],
     );
