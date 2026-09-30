@@ -9,11 +9,12 @@ def apiToken = project.findProperty('API_TOKEN') ?: 'mdi9a9083df9bnq97ssdbibbu7d
 
 android {
     namespace 'com.familyshare.simonel'
-    compileSdk 35
+    compileSdk flutter.compileSdkVersion
+    ndkVersion flutter.ndkVersion
 
     defaultConfig {
         applicationId 'com.familyshare.simonel'
-        minSdk 23
+        minSdkVersion flutter.minSdkVersion
         targetSdk 35
         versionCode 1
         versionName '1.0.0'
